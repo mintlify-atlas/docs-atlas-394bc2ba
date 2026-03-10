@@ -1,0 +1,383 @@
+---
+title: FAQ
+description: Frequently asked questions about Obsidian Chess Studio
+---
+
+# Frequently Asked Questions
+
+Find answers to common questions about Obsidian Chess Studio.
+
+## General Questions
+
+<AccordionGroup>
+  <Accordion title="What is Obsidian Chess Studio?">
+    Obsidian Chess Studio is a comprehensive, open-source chess analysis platform that combines powerful engine integration, advanced game analysis, and intelligent training systems into a single, cross-platform application.
+
+    It provides:
+    - Deep game analysis with multi-engine support
+    - Opening repertoire training with spaced repetition
+    - Integrated player statistics from Lichess and Chess.com
+    - Advanced database search capabilities
+    - Adaptive puzzle system
+    - And much more!
+  </Accordion>
+
+  <Accordion title="Is Obsidian Chess Studio free?">
+    Yes! Obsidian Chess Studio is completely free and open source, licensed under GPL-3.0. There are no premium features, subscriptions, or hidden costs.
+  </Accordion>
+
+  <Accordion title="How does Obsidian Chess Studio compare to ChessBase?">
+    While ChessBase is a premium product (~€500), Obsidian Chess Studio provides similar professional-grade features for free:
+    
+    - ✅ Multi-engine simultaneous analysis
+    - ✅ Large downloadable databases
+    - ✅ Cross-platform (Windows, macOS, Linux)
+    - ✅ Modern, intuitive interface
+    - ✅ Online account sync (Lichess, Chess.com)
+    - ✅ Open source
+
+    See our [comparison table](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio#comparison) for a detailed breakdown.
+  </Accordion>
+
+  <Accordion title="What platforms are supported?">
+    Obsidian Chess Studio runs on:
+    - **Windows** (Windows 10 and later)
+    - **macOS** (Apple Silicon and Intel)
+    - **Linux** (AppImage, .deb, .rpm)
+    - **Android** (APK available, mobile app in development)
+  </Accordion>
+</AccordionGroup>
+
+## Installation & Setup
+
+<AccordionGroup>
+  <Accordion title="How do I install Obsidian Chess Studio?">
+    1. Visit the [releases page](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/releases/latest)
+    2. Download the appropriate file for your platform:
+       - Windows: `.exe`
+       - macOS: `.dmg`
+       - Linux: `.AppImage`, `.deb`, or `.rpm`
+    3. Install and launch the application
+
+    See our [Installation Guide](/installation) for detailed instructions.
+  </Accordion>
+
+  <Accordion title="Do I need to install a chess engine separately?">
+    No! Obsidian Chess Studio comes with Stockfish built-in, so you can start analyzing immediately. You can also add additional UCI-compatible engines if desired.
+  </Accordion>
+
+  <Accordion title="How do I import games from Lichess or Chess.com?">
+    1. Go to **Settings → Accounts**
+    2. Connect your Lichess or Chess.com account
+    3. Your games will automatically sync
+
+    You can also manually import games by:
+    - Pasting a game URL
+    - Importing PGN files
+    - Entering games manually
+  </Accordion>
+
+  <Accordion title="Can I use my own chess engines?">
+    Yes! Obsidian Chess Studio supports all UCI-compatible engines. To add a custom engine:
+
+    1. Go to **Settings → Engines**
+    2. Click **Add Engine**
+    3. Select your engine's executable file
+    4. Configure engine options as needed
+  </Accordion>
+</AccordionGroup>
+
+## Features & Usage
+
+<AccordionGroup>
+  <Accordion title="How do I analyze a game?">
+    1. Open or import a game
+    2. Click the **Analysis** tab
+    3. Start the engine (it's enabled by default)
+    4. Navigate through moves to see engine evaluations
+
+    For deep analysis:
+    - Use **Computer Analysis** to automatically analyze all moves
+    - View the **Report** tab for detailed statistics
+    - Check **Mistakes** to see blunders and missed opportunities
+  </Accordion>
+
+  <Accordion title="What are opening repertoires and how do I create one?">
+    Opening repertoires help you memorize and practice your opening lines using spaced repetition.
+
+    To create a repertoire:
+    1. Go to **Repertoire** tab
+    2. Click **New Repertoire**
+    3. Choose your color and name
+    4. Add variations from games or manually
+    5. Use the trainer to practice regularly
+
+    The system will automatically track which positions you know well and which need more practice.
+  </Accordion>
+
+  <Accordion title="How does the puzzle system work?">
+    The adaptive puzzle system adjusts difficulty based on your performance:
+
+    - Puzzles have their own Elo rating
+    - Your puzzle rating increases when you solve them correctly
+    - The system presents puzzles near your current rating
+    - Track your progress with statistics and streaks
+
+    Access puzzles from the **Puzzles** tab in the main menu.
+  </Accordion>
+
+  <Accordion title="Can I search for specific positions?">
+    Yes! Obsidian Chess Studio has powerful search capabilities:
+
+    **Exact position search:**
+    - Search by FEN string
+    - Find games with identical positions
+
+    **Partial position search:**
+    - Search by material patterns
+    - Filter by piece placement
+    - Find similar positions
+
+    Additional filters:
+    - Player names
+    - ECO codes (opening classification)
+    - Date ranges
+    - Game results
+    - Rating ranges
+  </Accordion>
+
+  <Accordion title="How do I view my player statistics?">
+    1. Create a player profile in **Settings → Profiles**
+    2. Link your online accounts (Lichess, Chess.com)
+    3. Go to **Statistics** tab
+
+    You can view:
+    - Rating progression over time
+    - Performance by time control
+    - Opening statistics
+    - Win/draw/loss breakdown
+    - Pawn structure analysis
+    - Monthly game distribution
+    - And much more!
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The engine isn't working. What should I do?">
+    Try these steps:
+
+    1. **Check if the engine is enabled:**
+       - Look for engine status in the analysis panel
+       - Verify engine is running in **Settings → Engines**
+
+    2. **Restart the engine:**
+       - Click the engine stop button
+       - Click start again
+
+    3. **Reinstall/re-add the engine:**
+       - Remove the engine in settings
+       - Add it again
+
+    4. **Check system resources:**
+       - Ensure your computer has available CPU/memory
+       - Close other resource-intensive applications
+
+    If the problem persists, [open an issue](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues/new/choose) with details.
+  </Accordion>
+
+  <Accordion title="Games won't import from Lichess/Chess.com">
+    Common solutions:
+
+    1. **Check your internet connection**
+    2. **Verify account credentials:**
+       - Go to **Settings → Accounts**
+       - Reconnect your account
+    3. **Check if the account is public:**
+       - Some accounts require public game access
+    4. **Try manual import:**
+       - Download PGN from Lichess/Chess.com
+       - Import the PGN file directly
+
+    If you're still having issues, check [GitHub Discussions](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions) or report a bug.
+  </Accordion>
+
+  <Accordion title="The app is slow or laggy">
+    Performance tips:
+
+    1. **Reduce engine threads:**
+       - Go to **Settings → Engines**
+       - Lower the number of threads
+
+    2. **Limit engine depth:**
+       - Set a maximum depth (e.g., 20-25)
+       - Reduce analysis time
+
+    3. **Close other applications:**
+       - Free up system resources
+
+    4. **Check database size:**
+       - Very large databases may take time to index
+       - Consider splitting into multiple databases
+
+    5. **Update to the latest version:**
+       - Performance improvements are regularly added
+  </Accordion>
+
+  <Accordion title="How do I reset my settings?">
+    If you need to reset Obsidian Chess Studio to default settings:
+
+    1. Close the application
+    2. Locate the configuration directory:
+       - **Windows:** `%APPDATA%/obsidian-chess-studio`
+       - **macOS:** `~/Library/Application Support/obsidian-chess-studio`
+       - **Linux:** `~/.config/obsidian-chess-studio`
+    3. Delete or rename the config folder
+    4. Restart the application
+
+    <Warning>
+      This will reset all settings including engine configurations, preferences, and account connections. Your games and databases will not be affected.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="I found a bug. How do I report it?">
+    We appreciate bug reports! Please:
+
+    1. **Search existing issues** to avoid duplicates
+    2. **Gather information:**
+       - App version (Settings → About)
+       - Operating system and version
+       - Steps to reproduce
+       - Screenshots/logs if available
+    3. **Submit a bug report:**
+       - Use our [bug report template](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues/new/choose)
+       - Provide as much detail as possible
+
+    See our [Support page](/community/support) for more information.
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Usage
+
+<AccordionGroup>
+  <Accordion title="Can I use multiple engines simultaneously?">
+    Yes! This is one of Obsidian Chess Studio's key features:
+
+    1. Go to **Settings → Engines**
+    2. Add multiple engines
+    3. In the analysis view, enable multiple engines
+    4. Compare evaluations side-by-side
+
+    This is useful for:
+    - Getting different perspectives on positions
+    - Comparing specialized engines (endgame, tactical, etc.)
+    - Training and learning
+  </Accordion>
+
+  <Accordion title="How do I use Syzygy tablebases?">
+    Tablebases provide perfect play in endgames:
+
+    1. Download Syzygy tablebase files (3-7 piece tables)
+    2. Go to **Settings → Engines**
+    3. Configure the tablebase path for your engine
+    4. Restart the engine
+
+    Engines will automatically use tablebases when applicable, showing "Tablebase" in the evaluation.
+  </Accordion>
+
+  <Accordion title="Can I customize keyboard shortcuts?">
+    Yes! Obsidian Chess Studio has fully customizable keybindings:
+
+    1. Go to **Settings → Keybindings**
+    2. Click on any action to reassign its shortcut
+    3. Press your desired key combination
+    4. Save changes
+
+    All navigation, analysis, and interface actions can be customized.
+  </Accordion>
+
+  <Accordion title="How do I export my analysis?">
+    To export games with analysis:
+
+    1. Open the game you want to export
+    2. Click **Export** or use the file menu
+    3. Choose PGN format
+    4. Select what to include:
+       - Engine evaluations
+       - Variations
+       - Comments
+       - Annotations
+    5. Save the file
+
+    The exported PGN can be imported into any chess software that supports PGN with annotations.
+  </Accordion>
+</AccordionGroup>
+
+## Development & Contributing
+
+<AccordionGroup>
+  <Accordion title="How can I contribute to Obsidian Chess Studio?">
+    We welcome contributions! You can help by:
+
+    - **Code:** Submit bug fixes or new features
+    - **Translations:** Help localize the app
+    - **Documentation:** Improve or expand docs
+    - **Testing:** Report bugs and test new features
+    - **Feedback:** Share ideas and suggestions
+
+    Check our [Contributing Guide](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/blob/main/CONTRIBUTING.md) for details.
+  </Accordion>
+
+  <Accordion title="How do I build from source?">
+    To build Obsidian Chess Studio yourself:
+
+    ```bash
+    # Clone the repository
+    git clone git@github.com:luisrivasnoriega/Obsidian-Chess-Studio.git
+    cd Obsidian-Chess-Studio
+
+    # Install dependencies
+    pnpm install
+
+    # Run in development mode
+    pnpm tauri dev
+
+    # Build for production
+    pnpm tauri build
+    ```
+
+    See the [README](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio#development) for prerequisites and detailed instructions.
+  </Accordion>
+
+  <Accordion title="What technologies is Obsidian Chess Studio built with?">
+    Obsidian Chess Studio uses:
+
+    **Backend:**
+    - Rust (via Tauri)
+    - SQLite for database storage
+
+    **Frontend:**
+    - React 19
+    - TypeScript
+    - Vite
+    - Mantine UI components
+
+    **Chess Libraries:**
+    - Chessground for board rendering
+    - chessops for chess logic
+  </Accordion>
+</AccordionGroup>
+
+## Still Have Questions?
+
+If you didn't find your answer here:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Discussions" icon="comments" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions">
+    Ask the community
+  </Card>
+  <Card title="Report an Issue" icon="bug" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues">
+    Found a bug? Let us know
+  </Card>
+</CardGroup>

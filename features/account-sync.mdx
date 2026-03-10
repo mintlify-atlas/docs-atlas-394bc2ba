@@ -1,0 +1,419 @@
+---
+title: Account Synchronization
+description: Connect Lichess and Chess.com accounts for automatic game downloads and profile sync
+---
+
+## Overview
+
+Obsidian Chess Studio supports automatic synchronization with Lichess and Chess.com, allowing you to:
+- **Import games automatically** from both platforms
+- **Track rating progression** across platforms
+- **Access profile data** including statistics and ratings
+- **Download games on demand** with flexible filtering
+
+## Lichess Integration
+
+### OAuth Authentication
+
+Lichess uses OAuth 2.0 with PKCE (Proof Key for Code Exchange) for secure authentication:
+
+```rust
+// src-tauri/src/oauth.rs:17
+fn create_client(redirect_url: RedirectUrl) -> BasicClient {
+    let client_id = ClientId::new("com.luisrivasnoriega.ocs".to_string());
+    let auth_url = AuthUrl::new("https://lichess.org/oauth".to_string());
+    let token_url = TokenUrl::new("https://lichess.org/api/token".to_string());
+    
+    BasicClient::new(client_id, None, auth_url.unwrap(), token_url.ok())
+        .set_redirect_uri(redirect_url)
+}
+```
+
+### Authentication Flow
+
+<Steps>
+  <Step title="Initiate OAuth">
+    User clicks "Connect Lichess" in the application
+    
+    ```typescript
+    await invoke('authenticate', {
+      username: 'your_username'
+    });
+    ```
+  </Step>
+
+  <Step title="Generate PKCE Challenge">
+    Application generates PKCE code challenge:
+    
+    ```rust
+    let (pkce_code_challenge, pkce_code_verifier) = 
+        PkceCodeChallenge::new_random_sha256();
+    ```
+  </Step>
+
+  <Step title="Open Browser">
+    User is redirected to Lichess authorization page:
+    
+    ```rust
+    let (auth_url, _) = client
+        .authorize_url(|| csrf_token.clone())
+        .add_scope(Scope::new("preference:read".to_string()))
+        .set_pkce_challenge(pkce_code_challenge)
+        .url();
+    
+    app.opener().open_url(auth_url)?;
+    ```
+  </Step>
+
+  <Step title="Callback Handling">
+    After authorization, Lichess redirects to local callback server:
+    
+    ```rust
+    // Local server listens on random port (e.g., http://127.0.0.1:54321/callback)
+    let socket_addr = get_available_addr();  // Finds unused port
+    
+    Router::new()
+        .route("/callback", get(authorize))
+        .layer(Extension(app.clone()))
+    ```
+  </Step>
+
+  <Step title="Token Exchange">
+    Exchange authorization code for access token:
+    
+    ```rust
+    let token = client
+        .exchange_code(code)
+        .set_pkce_verifier(PkceCodeVerifier::new(pkce_verifier))
+        .request_async(async_http_client)
+        .await?;
+    
+    app.emit("access_token", token.access_token().secret())?;
+    ```
+  </Step>
+</Steps>
+
+### Security Features
+
+<Note>
+**PKCE Protection**: The OAuth flow uses PKCE to prevent authorization code interception attacks, even though the client is a native application.
+</Note>
+
+<Warning>
+**CSRF Protection**: The application validates CSRF tokens to prevent cross-site request forgery:
+
+```rust
+if query.state.secret() != auth.csrf_token.secret() {
+    log::warn!("CSRF token mismatch in OAuth callback");
+    return "authorized";
+}
+```
+</Warning>
+
+### Lichess API Access
+
+Once authenticated, access Lichess data:
+
+```typescript
+// Get account information
+const accountData = await invoke('get_lichess_account', {
+  token: accessToken,
+  username: null
+});
+
+const account = JSON.parse(accountData);
+console.log(`Username: ${account.username}`);
+console.log(`Rating: ${account.perfs.blitz.rating}`);
+```
+
+### Public Profile Access
+
+Access public profiles without authentication:
+
+```typescript
+// Get public profile data
+const profileData = await invoke('get_lichess_account', {
+  token: null,
+  username: 'player_name'
+});
+```
+
+## Chess.com Integration
+
+### Public API
+
+Chess.com does not require OAuth for reading public data:
+
+```rust
+// src-tauri/src/online.rs:56
+pub async fn get_chesscom_account(username: String) -> Result<Option<String>> {
+    let client = reqwest_client().await?;
+    let url = format!(
+        "https://api.chess.com/pub/player/{}/stats",
+        username.to_ascii_lowercase()
+    );
+    
+    let res = client.get(url).send().await?;
+    
+    if !res.status().is_success() {
+        return Ok(None);
+    }
+    
+    Ok(Some(res.text().await?))
+}
+```
+
+### Usage
+
+```typescript
+const statsData = await invoke('get_chesscom_account', {
+  username: 'player_name'
+});
+
+const stats = JSON.parse(statsData);
+console.log(`Blitz rating: ${stats.chess_blitz.last.rating}`);
+console.log(`Rapid rating: ${stats.chess_rapid.last.rating}`);
+```
+
+## Game Downloads
+
+### Automatic Sync
+
+Games are automatically downloaded when you connect an account:
+
+```typescript
+// After connecting account, trigger sync
+await invoke('sync_online_games', {
+  file: dbPath,
+  accounts: [
+    { platform: 'lichess', username: 'user1', token: lichessToken },
+    { platform: 'chesscom', username: 'user2', token: null }
+  ]
+});
+```
+
+### Sync State Tracking
+
+The application tracks sync state to avoid re-downloading games:
+
+```rust
+// src-tauri/src/db/sync_state.rs
+pub struct SyncState {
+    pub platform: String,      // "Lichess" or "Chess.com"
+    pub username: String,
+    pub last_sync: String,     // ISO 8601 timestamp
+    pub last_game_id: Option<String>,
+    pub games_synced: i32,
+}
+```
+
+### Incremental Sync
+
+Only new games are downloaded on subsequent syncs:
+
+```sql
+SELECT last_sync, last_game_id 
+FROM sync_state 
+WHERE platform = ? AND username = ?
+```
+
+The sync process uses the `last_game_id` to fetch only games after the last sync.
+
+## Rate Limiting
+
+### Request Configuration
+
+All API requests use proper timeouts and user agent:
+
+```rust
+async fn reqwest_client() -> Result<reqwest::Client> {
+    Ok(reqwest::Client::builder()
+        .connect_timeout(Duration::from_millis(5_000))
+        .timeout(Duration::from_secs(60))
+        .user_agent("Obsidian Chess Studio")
+        .build()?)
+}
+```
+
+### Best Practices
+
+<Tip>
+**Rate Limit Guidelines**:
+- **Lichess**: Max 1 request per second for authenticated users
+- **Chess.com**: Max 20 requests per minute for public API
+- The application automatically handles rate limiting with exponential backoff
+</Tip>
+
+## Tournament Creation (Lichess)
+
+### Create Arena Tournament
+
+Create Lichess tournaments directly from the application:
+
+```typescript
+interface TournamentCreateRequest {
+  token: string;
+  form: Array<[string, string]>;  // URLSearchParams format
+}
+
+// Example: Create a 3+2 blitz tournament
+const form = [
+  ['name', 'Weekly Blitz Arena'],
+  ['clockTime', '3'],
+  ['clockIncrement', '2'],
+  ['minutes', '60'],          // Duration: 60 minutes
+  ['startDate', '2024-12-25T20:00:00Z'],
+  ['variant', 'standard'],
+  ['rated', 'true'],
+  ['berserkable', 'true'],
+  ['streakable', 'false'],
+  ['description', 'Weekly tournament for club members']
+];
+
+const result = await invoke('create_lichess_tournament', {
+  input: { token: accessToken, form }
+});
+
+const tournament = JSON.parse(result);
+console.log(`Tournament created: ${tournament.fullName}`);
+console.log(`URL: https://lichess.org/tournament/${tournament.id}`);
+```
+
+### Tournament Parameters
+
+<ParamField path="name" type="string" required>
+  Tournament name (max 30 characters)
+</ParamField>
+
+<ParamField path="clockTime" type="number" required>
+  Initial time in minutes (e.g., 3 for 3+2 blitz)
+</ParamField>
+
+<ParamField path="clockIncrement" type="number" required>
+  Increment in seconds per move
+</ParamField>
+
+<ParamField path="minutes" type="number" required>
+  Tournament duration in minutes (10-720)
+</ParamField>
+
+<ParamField path="startDate" type="string">
+  Start date in ISO 8601 format. Omit for immediate start.
+</ParamField>
+
+<ParamField path="variant" type="enum" default="standard">
+  Chess variant: `standard`, `chess960`, `crazyhouse`, `antichess`, `atomic`, `horde`, `kingOfTheHill`, `racingKings`, `threeCheck`
+</ParamField>
+
+<ParamField path="rated" type="boolean" default="true">
+  Whether games affect player ratings
+</ParamField>
+
+<ParamField path="berserkable" type="boolean" default="true">
+  Allow berserk (halve time for +1 point)
+</ParamField>
+
+<ParamField path="streakable" type="boolean" default="true">
+  Enable arena streaks
+</ParamField>
+
+<ParamField path="description" type="string">
+  Tournament description (supports Markdown)
+</ParamField>
+
+## Error Handling
+
+### Connection Errors
+
+```typescript
+try {
+  const account = await invoke('get_lichess_account', { token, username: null });
+  // Success
+} catch (error) {
+  if (error.includes('401')) {
+    console.error('Invalid or expired token');
+    // Prompt re-authentication
+  } else if (error.includes('timeout')) {
+    console.error('Connection timeout');
+    // Retry with exponential backoff
+  } else {
+    console.error('Unknown error:', error);
+  }
+}
+```
+
+### Token Expiration
+
+<Warning>
+Lichess OAuth tokens do not expire by default, but users can revoke access at any time. The application should handle `401 Unauthorized` responses gracefully and prompt re-authentication.
+</Warning>
+
+## Privacy & Data Storage
+
+### Token Storage
+
+<Note>
+**Security**: Access tokens are stored securely using the platform's keychain:
+- **macOS**: Keychain
+- **Windows**: Credential Manager
+- **Linux**: Secret Service API (libsecret)
+</Note>
+
+### Stored Data
+
+The application stores:
+- **Access tokens** (encrypted in system keychain)
+- **Account usernames**
+- **Sync state** (last sync timestamp, last game ID)
+- **Downloaded games** (in local SQLite database)
+
+### Data Privacy
+
+- **No password storage**: The app never stores or transmits passwords
+- **Token scope**: Lichess tokens only have `preference:read` scope (minimal permissions)
+- **Local storage**: All game data is stored locally, never uploaded to external servers
+- **GDPR compliance**: Users can delete all data by removing the database file
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="OAuth Callback Not Working">
+    If the OAuth callback fails:
+    
+    1. **Check firewall**: Ensure localhost connections are allowed
+    2. **Port conflict**: The app uses a random available port; restart the app to try a different port
+    3. **Browser issues**: Try a different default browser
+    4. **Manual token**: As a workaround, create a token manually at https://lichess.org/account/oauth/token
+  </Accordion>
+
+  <Accordion title="Token Invalid or Expired">
+    If you receive 401 errors:
+    
+    1. **Re-authenticate**: Disconnect and reconnect the account
+    2. **Check scope**: Ensure the token has `preference:read` scope
+    3. **Revoked access**: The user may have revoked access on Lichess; check https://lichess.org/account/oauth/app
+  </Accordion>
+
+  <Accordion title="Sync Taking Too Long">
+    For accounts with thousands of games:
+    
+    1. **First sync**: Initial sync can take several minutes
+    2. **Rate limiting**: The application respects API rate limits
+    3. **Background sync**: Close the app and sync will continue in background (future feature)
+    4. **Incremental sync**: Subsequent syncs are much faster (only new games)
+  </Accordion>
+
+  <Accordion title="Chess.com Profile Not Found">
+    If Chess.com API returns 404:
+    
+    1. **Username case**: Chess.com usernames are case-insensitive, but check spelling
+    2. **Account privacy**: Some accounts have restricted public data
+    3. **API status**: Check Chess.com API status at https://www.chess.com/news/view/published-data-api
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Player Statistics](/features/player-statistics)
+- [Database Management](/guide/database-management)
+- [Game Import](/guide/importing-games)

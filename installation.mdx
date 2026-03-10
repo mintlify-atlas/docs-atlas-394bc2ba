@@ -1,0 +1,449 @@
+---
+title: "Installation"
+description: "Download and install Obsidian Chess Studio on Windows, macOS, Linux, or Android"
+---
+
+## Download Obsidian Chess Studio
+
+Get the latest version for your platform:
+
+<Card title="Download Latest Release" icon="download" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/releases/latest">
+  Download prebuilt binaries for Windows, macOS, Linux, and Android
+</Card>
+
+<Note>
+  **Current Version:** 2.6.9 | **License:** GPL-3.0 | **All platforms supported**
+</Note>
+
+## System Requirements
+
+Before installing, ensure your system meets these minimum requirements:
+
+<AccordionGroup>
+  <Accordion title="Windows" icon="windows">
+    - **OS:** Windows 10 or later (64-bit)
+    - **RAM:** 4 GB minimum, 8 GB recommended
+    - **Storage:** 500 MB for application + space for databases
+    - **Processor:** x86-64 compatible (SSE4.1 or better for Stockfish)
+  </Accordion>
+  
+  <Accordion title="macOS" icon="apple">
+    - **OS:** macOS 10.15 (Catalina) or later
+    - **RAM:** 4 GB minimum, 8 GB recommended
+    - **Storage:** 500 MB for application + space for databases
+    - **Processor:** Intel (x86-64) or Apple Silicon (M1/M2/M3)
+  </Accordion>
+  
+  <Accordion title="Linux" icon="linux">
+    - **OS:** Ubuntu 20.04+, Fedora 35+, or equivalent
+    - **RAM:** 4 GB minimum, 8 GB recommended
+    - **Storage:** 500 MB for application + space for databases
+    - **Processor:** x86-64 compatible (SSE4.1 or better for Stockfish)
+    - **Dependencies:** Standard desktop libraries (included in most distributions)
+  </Accordion>
+  
+  <Accordion title="Android" icon="android">
+    - **OS:** Android 8.0 (Oreo) or later
+    - **RAM:** 2 GB minimum, 4 GB recommended
+    - **Storage:** 200 MB for application + space for databases
+    - **Processor:** ARM64 (aarch64)
+    
+    <Warning>
+      Android support is currently in development. Some features may be limited.
+    </Warning>
+  </Accordion>
+</AccordionGroup>
+
+## Installation by Platform
+
+<Tabs>
+  <Tab title="Windows">
+    <Steps>
+      <Step title="Download the installer">
+        Download `obsidian-chess-studio_2.6.9_x64_en-US.msi` or the `.exe` installer from the [releases page](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/releases/latest).
+      </Step>
+      
+      <Step title="Run the installer">
+        Double-click the downloaded file. If you see a Windows SmartScreen warning, click **More info** → **Run anyway**.
+        
+        <Note>
+          The SmartScreen warning appears because the application isn't signed with an expensive code signing certificate. The software is safe and open source.
+        </Note>
+      </Step>
+      
+      <Step title="Follow installation wizard">
+        - Accept the license agreement (GPL-3.0)
+        - Choose installation directory (default: `C:\Program Files\Obsidian Chess Studio`)
+        - Select whether to create desktop shortcut
+        - Click **Install**
+      </Step>
+      
+      <Step title="Launch the application">
+        Once installation completes, click **Finish** to launch Obsidian Chess Studio.
+      </Step>
+    </Steps>
+    
+    ### Windows-Specific Notes
+    
+    - **Stockfish engine:** Stockfish 18 is bundled and will be automatically configured on first launch
+    - **Updates:** The application can check for updates automatically (configurable in Settings)
+    - **Uninstall:** Use Windows Settings → Apps → Obsidian Chess Studio → Uninstall
+  </Tab>
+  
+  <Tab title="macOS">
+    <Steps>
+      <Step title="Download the DMG file">
+        Download the `.dmg` file for your Mac:
+        - **Apple Silicon (M1/M2/M3):** `obsidian-chess-studio_aarch64.dmg`
+        - **Intel Macs:** `obsidian-chess-studio_x64.dmg`
+        
+        <Tip>
+          Not sure which one? Click the Apple menu → **About This Mac**. If it says "Apple M1/M2/M3", use the Apple Silicon version.
+        </Tip>
+      </Step>
+      
+      <Step title="Open the DMG file">
+        Double-click the downloaded `.dmg` file to mount it.
+      </Step>
+      
+      <Step title="Install the application">
+        Drag **Obsidian Chess Studio** to the **Applications** folder shortcut in the DMG window.
+      </Step>
+      
+      <Step title="First launch">
+        Open **Obsidian Chess Studio** from Applications. If you see a security warning:
+        
+        1. Open **System Settings** → **Privacy & Security**
+        2. Scroll down to the **Security** section
+        3. Click **Open Anyway** next to the blocked app message
+        4. Confirm by clicking **Open**
+        
+        <Note>
+          This is macOS Gatekeeper protection. The app is safe but unsigned. After the first launch, you won't see this warning again.
+        </Note>
+      </Step>
+    </Steps>
+    
+    ### macOS-Specific Notes
+    
+    - **Stockfish engine:** The appropriate Stockfish 18 build for your architecture is bundled
+    - **Updates:** Automatic update checking is supported
+    - **Uninstall:** Drag the app from Applications to Trash
+  </Tab>
+  
+  <Tab title="Linux">
+    Choose your preferred package format:
+    
+    ### AppImage (Universal)
+    
+    <Steps>
+      <Step title="Download AppImage">
+        Download `obsidian-chess-studio_2.6.9_amd64.AppImage` from the [releases page](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/releases/latest).
+      </Step>
+      
+      <Step title="Make executable">
+        ```bash
+        chmod +x obsidian-chess-studio_2.6.9_amd64.AppImage
+        ```
+      </Step>
+      
+      <Step title="Run the application">
+        ```bash
+        ./obsidian-chess-studio_2.6.9_amd64.AppImage
+        ```
+        
+        <Tip>
+          You can move the AppImage to `~/Applications` or `/opt` for easier access, or create a desktop shortcut.
+        </Tip>
+      </Step>
+    </Steps>
+    
+    ### Debian/Ubuntu (.deb)
+    
+    <Steps>
+      <Step title="Download the .deb package">
+        Download `obsidian-chess-studio_2.6.9_amd64.deb`
+      </Step>
+      
+      <Step title="Install with apt">
+        ```bash
+        sudo apt install ./obsidian-chess-studio_2.6.9_amd64.deb
+        ```
+        
+        Or double-click the file to install via your software center.
+      </Step>
+      
+      <Step title="Launch the application">
+        ```bash
+        obsidian-chess-studio
+        ```
+        
+        Or find it in your applications menu.
+      </Step>
+    </Steps>
+    
+    ### Fedora/RHEL (.rpm)
+    
+    <Steps>
+      <Step title="Download the .rpm package">
+        Download `obsidian-chess-studio_2.6.9_x86_64.rpm`
+      </Step>
+      
+      <Step title="Install with dnf">
+        ```bash
+        sudo dnf install ./obsidian-chess-studio_2.6.9_x86_64.rpm
+        ```
+      </Step>
+      
+      <Step title="Launch the application">
+        ```bash
+        obsidian-chess-studio
+        ```
+      </Step>
+    </Steps>
+    
+    ### Linux-Specific Notes
+    
+    - **Stockfish engine:** Optimized builds for x86-64 architectures (AVX2, BMI2, etc.)
+    - **Dependencies:** Most dependencies are bundled; standard desktop libraries required
+    - **Uninstall:**
+      - AppImage: Just delete the file
+      - Debian/Ubuntu: `sudo apt remove obsidian-chess-studio`
+      - Fedora/RHEL: `sudo dnf remove obsidian-chess-studio`
+  </Tab>
+  
+  <Tab title="Android">
+    <Warning>
+      Android support is currently in beta. Some features may be limited or unavailable.
+    </Warning>
+    
+    <Steps>
+      <Step title="Download the APK">
+        Download `obsidian-chess-studio_2.6.9_universal.apk` from the [releases page](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/releases/latest).
+      </Step>
+      
+      <Step title="Enable unknown sources">
+        Before installing:
+        
+        1. Open **Settings** → **Security** (or **Apps & notifications**)
+        2. Enable **Install unknown apps** for your browser or file manager
+        
+        <Note>
+          This setting is required because the APK isn't from Google Play Store. You can disable it after installation.
+        </Note>
+      </Step>
+      
+      <Step title="Install the APK">
+        1. Open the downloaded APK file
+        2. Tap **Install**
+        3. Wait for installation to complete
+        4. Tap **Open** to launch
+      </Step>
+      
+      <Step title="Updating">
+        To update:
+        
+        1. Download the latest APK from GitHub Releases
+        2. Open the new APK file
+        3. Tap **Update**
+        
+        Your data and settings will be preserved.
+      </Step>
+    </Steps>
+    
+    ### Android-Specific Notes
+    
+    - **Stockfish engine:** ARM64-optimized build included
+    - **Storage:** Databases are stored in app-specific storage
+    - **Limited features:** Some desktop features may not be available on mobile
+  </Tab>
+</Tabs>
+
+## First Launch Setup
+
+When you first launch Obsidian Chess Studio, you'll go through a brief setup:
+
+<Steps>
+  <Step title="Welcome screen">
+    Read the welcome message and click **Get Started**.
+  </Step>
+  
+  <Step title="Create your first profile">
+    Profiles help you organize games from different sources:
+    
+    - Enter a profile name (e.g., "Main" or your chess.com username)
+    - Optionally link a Lichess or Chess.com account
+    - Click **Create Profile**
+    
+    <Tip>
+      You can create multiple profiles later for different accounts or purposes (training, tournaments, etc.).
+    </Tip>
+  </Step>
+  
+  <Step title="Engine verification">
+    OCS will automatically detect and configure the bundled Stockfish 18 engine. You should see:
+    
+    - ✅ Stockfish 18 detected and configured
+    - Engine status: Ready
+    
+    <Note>
+      The optimal Stockfish build for your CPU is automatically selected (AVX2, BMI2, SSE4.1, etc.).
+    </Note>
+  </Step>
+  
+  <Step title="Choose your preferences">
+    Customize your experience:
+    
+    - **Theme:** Light, Dark, or System default
+    - **Piece set:** Choose from 30+ piece styles
+    - **Board colors:** Customize board appearance
+    - **Sound effects:** Enable move sounds (multiple sound packs available)
+    - **Language:** Select from 17 supported languages
+  </Step>
+  
+  <Step title="Start analyzing">
+    You're ready to go! The main board interface will appear.
+  </Step>
+</Steps>
+
+## Verifying Installation
+
+To ensure everything is working correctly:
+
+<AccordionGroup>
+  <Accordion title="Check Stockfish Engine" icon="brain">
+    1. Go to **Settings** → **Engines**
+    2. You should see **Stockfish 18** in the engine list
+    3. Click **Test** to verify the engine responds
+    4. You should see "Engine is working correctly"
+    
+    If the engine isn't detected:
+    - Restart the application
+    - Check system requirements (some builds require specific CPU features)
+    - See [Troubleshooting](#troubleshooting) below
+  </Accordion>
+  
+  <Accordion title="Test Analysis" icon="magnifying-glass">
+    1. Go to the **Analysis** board
+    2. Make a few moves
+    3. Enable analysis (toggle the engine button)
+    4. You should see evaluation numbers and best move suggestions
+    
+    If analysis doesn't work:
+    - Ensure the engine is enabled in Settings
+    - Check that you allocated at least 128 MB hash memory
+    - Verify CPU usage in Task Manager (engine should be using cores)
+  </Accordion>
+  
+  <Accordion title="Import a Test Game" icon="file-import">
+    1. Click **File** → **Import PGN**
+    2. Copy and paste this test game:
+    
+    ```pgn
+    [Event "Test Game"]
+    [White "Player1"]
+    [Black "Player2"]
+    [Result "1-0"]
+    
+    1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 1-0
+    ```
+    
+    3. Click **Import**
+    4. The game should load on the board
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Application won't start" icon="triangle-exclamation">
+    **Windows:**
+    - Check if Windows Defender is blocking the app
+    - Verify you have Visual C++ Runtime installed
+    - Try running as Administrator
+    
+    **macOS:**
+    - Remove quarantine attribute: `xattr -cr /Applications/Obsidian\ Chess\ Studio.app`
+    - Check Console.app for error messages
+    
+    **Linux:**
+    - Ensure you have required libraries: `ldd obsidian-chess-studio`
+    - Check for missing dependencies and install them
+    - Try running from terminal to see error messages
+  </Accordion>
+  
+  <Accordion title="Stockfish engine not working" icon="engine">
+    1. Go to **Settings** → **Engines** → **Add Engine**
+    2. Click **Download Stockfish**
+    3. Select the appropriate build for your CPU:
+       - **AVX-512:** Newest Intel/AMD CPUs
+       - **AVX2:** Modern CPUs (2013+)
+       - **SSE4.1:** Older CPUs
+       - **Basic:** Universal fallback
+    4. Wait for download and extraction
+    5. Test the engine
+    
+    If downloads fail:
+    - Check your internet connection
+    - Download manually from [Stockfish releases](https://github.com/official-stockfish/Stockfish/releases)
+    - Add the engine manually via **Browse** in Settings → Engines
+  </Accordion>
+  
+  <Accordion title="Database errors" icon="database">
+    If you see database errors:
+    
+    1. Close Obsidian Chess Studio
+    2. Locate your data directory:
+       - **Windows:** `C:\Users\YourName\AppData\Roaming\com.ocs`
+       - **macOS:** `~/Library/Application Support/com.ocs`
+       - **Linux:** `~/.local/share/com.ocs`
+    3. Backup the `db` folder
+    4. Delete corrupted database files if needed
+    5. Restart the application (databases will be recreated)
+  </Accordion>
+  
+  <Accordion title="Performance issues" icon="gauge-high">
+    If the application is slow:
+    
+    **Reduce engine resource usage:**
+    - Lower hash memory allocation (Settings → Engines)
+    - Reduce thread count (1-2 threads for older CPUs)
+    - Decrease analysis depth limit
+    
+    **Optimize database:**
+    - Settings → Database → **Optimize Database**
+    - Clear cached searches
+    - Consider archiving old games
+    
+    **System-level:**
+    - Close other applications
+    - Ensure adequate free RAM
+    - Check for disk space issues
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+If you encounter issues not covered here:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues">
+    Report bugs and technical issues
+  </Card>
+  <Card title="Discussions" icon="comments" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions">
+    Ask questions and get community support
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Now that Obsidian Chess Studio is installed:
+
+<CardGroup cols={2}>
+  <Card title="Quick Start Guide" icon="rocket" href="/quickstart">
+    Import your first game and start analyzing
+  </Card>
+  <Card title="User Guide" icon="book" href="/guide/profiles">
+    Learn about all features in detail
+  </Card>
+</CardGroup>

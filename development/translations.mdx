@@ -1,0 +1,508 @@
+---
+title: Translations
+description: Adding and maintaining translations for Obsidian Chess Studio
+---
+
+## Overview
+
+Obsidian Chess Studio is committed to making professional chess analysis accessible to players worldwide. The application supports **17+ languages** with community-contributed translations.
+
+## Supported Languages
+
+<CardGroup cols={3}>
+  <Card title="🇺🇸 English (US)" icon="circle-check">
+    100% - Base language
+  </Card>
+  <Card title="🇪🇸 Spanish" icon="circle-check">
+    99% - Nearly complete
+  </Card>
+  <Card title="🇩🇪 German" icon="circle-half-stroke">
+    77% - Partial
+  </Card>
+  <Card title="🇫🇷 French" icon="circle-half-stroke">
+    77% - Partial
+  </Card>
+  <Card title="🇯🇵 Japanese" icon="circle-half-stroke">
+    77% - Partial
+  </Card>
+  <Card title="🇷🇺 Russian" icon="circle-half-stroke">
+    77% - Partial
+  </Card>
+  <Card title="🇨🇳 Chinese" icon="circle-half-stroke">
+    77% - Partial
+  </Card>
+  <Card title="🇮🇹 Italian" icon="circle-half-stroke">
+    77% - Partial
+  </Card>
+  <Card title="🇵🇱 Polish" icon="circle-half-stroke">
+    77% - Partial
+  </Card>
+</CardGroup>
+
+**Additional languages:** Belarusian (77%), English UK (77%), Armenian (77%), Norwegian (77%), Portuguese (77%), Ukrainian (77%), Arabic (74%), Turkish (59%)
+
+<Note>
+  Translation percentages are automatically calculated based on the number of translated keys compared to English (US).
+</Note>
+
+## Translation Structure
+
+Translations are organized in `src/locales/` with one directory per language:
+
+```
+src/locales/
+├── en-US/               # English (US) - Base language
+│   └── common.json
+├── es/                  # Spanish
+│   └── common.json
+├── de/                  # German
+│   └── common.json
+├── fr/                  # French
+│   └── common.json
+├── ja/                  # Japanese
+│   └── common.json
+├── ru/                  # Russian
+│   └── common.json
+├── zh/                  # Chinese
+│   └── common.json
+└── ...
+```
+
+Each language has a `common.json` file with nested translation keys:
+
+```json
+{
+  "common": {
+    "on": "ON",
+    "off": "OFF",
+    "name": "Name",
+    "save": "Save"
+  },
+  "boards": {
+    "newGame": "New Game",
+    "analysis": "Analysis"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "language": "Language"
+  }
+}
+```
+
+## Adding a New Language
+
+Follow these steps to add a new language to Obsidian Chess Studio:
+
+<Steps>
+  <Step title="Create Language Directory">
+    Create a new directory using the language code:
+    
+    ```bash
+    # Example for Korean
+    mkdir src/locales/ko
+    ```
+    
+    **Language codes:**
+    - Use [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) codes (e.g., `ko`, `vi`, `th`)
+    - For regional variants, use `language-REGION` (e.g., `pt-BR`, `en-GB`)
+  </Step>
+  
+  <Step title="Copy Base Translation File">
+    Copy the English translation as a starting point:
+    
+    ```bash
+    cp src/locales/en-US/common.json src/locales/ko/common.json
+    ```
+  </Step>
+  
+  <Step title="Create Index File">
+    Create `src/locales/ko/index.ts`:
+    
+    ```typescript
+    import common from "./common.json";
+    
+    export default {
+      translation: common,
+    };
+    ```
+  </Step>
+  
+  <Step title="Translate Strings">
+    Open `common.json` and translate all text values:
+    
+    ```json
+    {
+      "common": {
+        "on": "설정",
+        "off": "해제",
+        "name": "이름",
+        "save": "저장"
+      }
+    }
+    ```
+    
+    <Warning>
+      - Keep JSON keys unchanged (e.g., `"on"`, `"name"`)
+      - Only translate the values
+      - Preserve interpolation variables like `{{value}}`
+    </Warning>
+  </Step>
+  
+  <Step title="Register Language in i18n">
+    Edit `src/i18n.ts` to add your language:
+    
+    ```typescript
+    // Add import
+    import ko from "./locales/ko";
+    
+    // Add to resources
+    const resources = {
+      "en-US": en_US,
+      "ko-KR": ko,  // Add this line
+      // ... other languages
+    };
+    ```
+  </Step>
+  
+  <Step title="Update Missing Translations">
+    Run the script to add any missing keys:
+    
+    ```bash
+    pnpm scripts/update-missing-translations.ts
+    ```
+    
+    This automatically adds missing keys with placeholder values.
+  </Step>
+  
+  <Step title="Update README">
+    Run the script to update the README:
+    
+    ```bash
+    pnpm scripts/update-readme.ts
+    ```
+    
+    This updates the translation progress table.
+  </Step>
+  
+  <Step title="Test Your Translation">
+    Start the dev server and test:
+    
+    ```bash
+    pnpm dev
+    ```
+    
+    1. Open the app
+    2. Go to Settings → Language
+    3. Select your language
+    4. Navigate through the app to verify translations
+  </Step>
+</Steps>
+
+## Updating Existing Translations
+
+<Steps>
+  <Step title="Find Your Language">
+    Locate the language directory:
+    ```bash
+    cd src/locales/es  # Example for Spanish
+    ```
+  </Step>
+  
+  <Step title="Edit Translations">
+    Open `common.json` and update translations:
+    
+    ```json
+    {
+      "boards": {
+        "newGame": "Nueva Partida",
+        "analysis": "Análisis"
+      }
+    }
+    ```
+  </Step>
+  
+  <Step title="Check for Missing Keys">
+    Run the update script:
+    ```bash
+    pnpm scripts/update-missing-translations.ts
+    ```
+    
+    This finds keys in `en-US` that are missing from your language.
+  </Step>
+  
+  <Step title="Test Changes">
+    ```bash
+    pnpm dev
+    ```
+    
+    Verify your changes in the running application.
+  </Step>
+</Steps>
+
+## Translation Scripts
+
+### Update Missing Translations
+
+```bash
+pnpm scripts/update-missing-translations.ts
+```
+
+**What it does:**
+- Compares each language to `en-US`
+- Adds missing keys with `"[MISSING]"` placeholders
+- Preserves existing translations
+- Updates all language files
+
+**Example output:**
+```
+Checking es/common.json...
+  Added 3 missing keys
+Checking de/common.json...
+  Added 15 missing keys
+```
+
+### Update README
+
+```bash
+pnpm scripts/update-readme.ts
+```
+
+**What it does:**
+- Calculates translation percentage for each language
+- Updates the translation table in `README.md`
+- Sorts languages by completion percentage
+
+## Translation Guidelines
+
+### General Rules
+
+<AccordionGroup>
+  <Accordion title="Preserve Formatting" icon="code">
+    Keep special syntax unchanged:
+    
+    ```json
+    {
+      "moveCount": "Move {{number}}",
+      "playerRating": "Rating: {{rating}}"
+    }
+    ```
+    
+    **Translate to:**
+    ```json
+    {
+      "moveCount": "Jugada {{number}}",
+      "playerRating": "Calificación: {{rating}}"
+    }
+    ```
+    
+    Don't remove `{{variables}}`!
+  </Accordion>
+  
+  <Accordion title="Chess Terminology" icon="chess">
+    Use standard chess terms in your language:
+    
+    **English → Spanish:**
+    - "Checkmate" → "Jaque mate"
+    - "Stalemate" → "Ahogado"
+    - "Castle" → "Enroque"
+    - "Pawn" → "Peón"
+    - "Knight" → "Caballo"
+    
+    **English → German:**
+    - "Checkmate" → "Schachmatt"
+    - "Castle" → "Rochade"
+    - "Knight" → "Springer"
+    
+    Refer to chess.com or Lichess in your language for standard terms.
+  </Accordion>
+  
+  <Accordion title="Context Matters" icon="message-question">
+    Some words have different meanings based on context:
+    
+    ```json
+    {
+      "common.close": "Close",        // Close a window
+      "boards.close": "Close Board"   // Close a chess board
+    }
+    ```
+    
+    Check where the key is used before translating.
+  </Accordion>
+  
+  <Accordion title="Keep Similar Length" icon="text-width">
+    Try to keep translations roughly the same length as English to avoid UI overflow:
+    
+    - **Short:** Button labels, menu items
+    - **Can be longer:** Descriptions, help text
+    
+    Test in the app to ensure text fits in UI components.
+  </Accordion>
+</AccordionGroup>
+
+### Special Cases
+
+<Tabs>
+  <Tab title="Pluralization">
+    i18next supports pluralization:
+    
+    ```json
+    {
+      "game": "Game",
+      "game_plural": "Games"
+    }
+    ```
+    
+    For languages with complex plural rules, see [i18next plurals](https://www.i18next.com/translation-function/plurals).
+  </Tab>
+  
+  <Tab title="Date/Time Formats">
+    Date and time formatting is handled by the app based on locale:
+    
+    - **en-US:** MM/DD/YYYY
+    - **en-GB:** DD/MM/YYYY
+    - **de-DE:** DD.MM.YYYY
+    
+    No translation needed for date formats.
+  </Tab>
+  
+  <Tab title="Chess Notation">
+    Chess move notation (SAN) is international:
+    
+    - Piece symbols may differ (K/R/B/N/Q in English)
+    - Some languages use different letters (e.g., Spanish: R/T/A/C/D)
+    
+    The app handles notation conversion automatically.
+  </Tab>
+  
+  <Tab title="Keyboard Shortcuts">
+    Keyboard shortcuts are shown in translations:
+    
+    ```json
+    {
+      "newGame": "New Game (Ctrl+N)"
+    }
+    ```
+    
+    Keep the shortcut in parentheses, but translate the action.
+  </Tab>
+</Tabs>
+
+## Testing Translations
+
+### In Development
+
+<Steps>
+  <Step title="Start Dev Server">
+    ```bash
+    pnpm dev
+    ```
+  </Step>
+  
+  <Step title="Change Language">
+    In the app:
+    1. Go to **Settings** → **Appearance**
+    2. Select your language from the dropdown
+    3. The app reloads with your translations
+  </Step>
+  
+  <Step title="Check All Screens">
+    Navigate through:
+    - Dashboard
+    - Game board
+    - Analysis panel
+    - Settings
+    - Dialogs and modals
+    
+    Look for:
+    - Missing translations (`[MISSING]` or English fallback)
+    - UI overflow (text too long)
+    - Grammatical errors
+  </Step>
+</Steps>
+
+### Automated Testing
+
+```bash
+# Run tests (includes i18n tests)
+pnpm test
+
+# Check for missing keys
+pnpm scripts/update-missing-translations.ts
+```
+
+## Submitting Translations
+
+<Steps>
+  <Step title="Create Branch">
+    ```bash
+    git checkout -b translation/korean
+    ```
+  </Step>
+  
+  <Step title="Commit Changes">
+    ```bash
+    git add src/locales/ko src/i18n.ts
+    git commit -m "feat: add Korean translation"
+    ```
+  </Step>
+  
+  <Step title="Run Scripts">
+    ```bash
+    # Update missing translations
+    pnpm scripts/update-missing-translations.ts
+    
+    # Update README
+    pnpm scripts/update-readme.ts
+    
+    # Commit updates
+    git add .
+    git commit -m "chore: update translation metadata"
+    ```
+  </Step>
+  
+  <Step title="Push and Create PR">
+    ```bash
+    git push origin translation/korean
+    ```
+    
+    Then create a pull request on GitHub with:
+    - **Title:** `feat: add Korean translation`
+    - **Description:** Translation completion percentage and any notes
+  </Step>
+</Steps>
+
+## Translation Progress
+
+Check current translation status:
+
+```bash
+# View in README.md
+cat README.md | grep -A 20 "TRANSLATIONS_START"
+
+# Or run the update script to see percentages
+pnpm scripts/update-readme.ts
+```
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="Translation Issues" icon="language" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues">
+    Report missing or incorrect translations
+  </Card>
+  
+  <Card title="Discussions" icon="comments" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions">
+    Ask questions about translations
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contributing Guide" href="/development/contributing" icon="code-pull-request">
+    Learn the full contribution workflow
+  </Card>
+  
+  <Card title="Development Overview" href="/development/overview" icon="code">
+    Understand the codebase
+  </Card>
+</CardGroup>

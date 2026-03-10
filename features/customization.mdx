@@ -1,0 +1,518 @@
+---
+title: Customization
+description: Themes, piece sets, board appearance, keyboard shortcuts, and UI preferences
+---
+
+## Overview
+
+Obsidian Chess Studio offers extensive customization options, including custom themes, piece sets, board appearance, sound effects, and keyboard shortcuts. All settings are stored locally and sync across sessions.
+
+## Themes
+
+### Theme System
+
+The application uses a comprehensive theming system based on Mantine UI:
+
+```typescript
+interface Theme {
+  id: string;
+  name: string;
+  description?: string;
+  author?: string;
+  version?: string;
+  isBuiltIn: boolean;
+  
+  // Core properties
+  scale: number;                // UI scale factor (0.8 - 1.2)
+  fontSmoothing: boolean;
+  focusRing: 'auto' | 'always' | 'never';
+  
+  // Colors
+  white: string;                // Background color for light mode
+  black: string;                // Background color for dark mode
+  colors: ThemeColors;          // Color palette
+  primaryShade: { light: number; dark: number };
+  primaryColor: string;
+  autoContrast: boolean;
+  luminanceThreshold: number;
+  
+  // Typography
+  fontFamily: string;
+  fontFamilyMonospace: string;
+  headings?: ThemeHeadings;
+  
+  // Layout
+  defaultRadius: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  
+  // Component overrides
+  components?: ThemeComponents;
+}
+```
+
+### Built-in Themes
+
+The application ships with several built-in themes:
+
+<CardGroup cols={2}>
+  <Card title="Default" icon="circle-half-stroke">
+    Modern, balanced theme with blue accents
+    - Light & dark mode optimized
+    - High contrast for readability
+  </Card>
+
+  <Card title="Academia Maya" icon="book">
+    Warm, academic theme inspired by Mayan culture
+    - Sepia tones for comfortable reading
+    - Merida piece set by default
+  </Card>
+
+  <Card title="OLED" icon="moon">
+    Pure black background for OLED displays
+    - True black (#000000) background
+    - Battery saving on OLED screens
+  </Card>
+
+  <Card title="High Contrast" icon="circle-half-stroke">
+    Maximum contrast for accessibility
+    - WCAG AAA compliant
+    - Large focus indicators
+  </Card>
+</CardGroup>
+
+### Color Scheme
+
+Color scheme (light/dark/auto) is separate from themes:
+
+```typescript
+type ColorScheme = 'light' | 'dark' | 'auto';
+
+// Auto mode follows system preference
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+```
+
+### Theme Operations
+
+<Tabs>
+  <Tab title="Create Theme">
+    ```typescript
+    import { useSetAtom } from 'jotai';
+    import { createThemeAtom } from '@/features/themes';
+    
+    const createTheme = useSetAtom(createThemeAtom);
+    
+    const newTheme = createTheme({
+      name: 'My Custom Theme',
+      description: 'A theme for my chess club',
+      author: 'Your Name',
+      
+      // Copy colors from existing theme
+      ...defaultTheme,
+      
+      // Override primary color
+      primaryColor: 'violet',
+      
+      // Custom colors
+      colors: {
+        ...defaultTheme.colors,
+        violet: [
+          '#f3e5f5', '#e1bee7', '#ce93d8', '#ba68c8',
+          '#ab47bc', '#9c27b0', '#8e24aa', '#7b1fa2',
+          '#6a1b9a', '#4a148c'
+        ]
+      }
+    });
+    ```
+  </Tab>
+
+  <Tab title="Update Theme">
+    ```typescript
+    import { updateThemeAtom } from '@/features/themes';
+    
+    const updateTheme = useSetAtom(updateThemeAtom);
+    
+    updateTheme({
+      id: themeId,
+      updates: {
+        name: 'Updated Theme Name',
+        primaryColor: 'teal',
+        scale: 1.1  // 110% UI scale
+      }
+    });
+    ```
+  </Tab>
+
+  <Tab title="Delete Theme">
+    ```typescript
+    import { deleteThemeAtom } from '@/features/themes';
+    
+    const deleteTheme = useSetAtom(deleteThemeAtom);
+    
+    // Cannot delete built-in themes
+    const success = deleteTheme(themeId);
+    ```
+  </Tab>
+
+  <Tab title="Duplicate Theme">
+    ```typescript
+    import { duplicateThemeAtom } from '@/features/themes';
+    
+    const duplicateTheme = useSetAtom(duplicateThemeAtom);
+    
+    const newTheme = duplicateTheme({
+      id: existingThemeId,
+      newName: 'My Modified Theme'
+    });
+    ```
+  </Tab>
+</Tabs>
+
+### Theme Import/Export
+
+Share themes with other users:
+
+<CodeGroup>
+```typescript Export Theme
+import { themeOperationsAtom } from '@/features/themes';
+import { useAtomValue } from 'jotai';
+
+const operations = useAtomValue(themeOperationsAtom);
+
+// Export theme (removes internal fields)
+const exportData = operations.export(themeId);
+
+// Save to file
+const json = JSON.stringify(exportData, null, 2);
+const blob = new Blob([json], { type: 'application/json' });
+const url = URL.createObjectURL(blob);
+
+// Trigger download
+const a = document.createElement('a');
+a.href = url;
+a.download = `${exportData.name}.json`;
+a.click();
+```
+
+```typescript Import Theme
+import { importThemeAtom } from '@/features/themes';
+import { useSetAtom } from 'jotai';
+
+const importTheme = useSetAtom(importThemeAtom);
+
+// Read file
+const file = await fileInput.files[0];
+const text = await file.text();
+const themeData = JSON.parse(text);
+
+// Import and validate
+try {
+  const newTheme = importTheme(themeData);
+  console.log(`Imported theme: ${newTheme.name}`);
+} catch (error) {
+  console.error('Invalid theme file:', error);
+}
+```
+</CodeGroup>
+
+## Piece Sets
+
+Multiple chess piece sets are available:
+
+<CardGroup cols={3}>
+  <Card title="Staunty" icon="chess-knight">
+    Default modern pieces
+  </Card>
+  
+  <Card title="Merida" icon="chess-knight">
+    Classic tournament style
+  </Card>
+  
+  <Card title="Alpha" icon="chess-knight">
+    Minimalist design
+  </Card>
+  
+  <Card title="California" icon="chess-knight">
+    Bold, rounded pieces
+  </Card>
+  
+  <Card title="Cardinal" icon="chess-knight">
+    Traditional elegant style
+  </Card>
+  
+  <Card title="Companion" icon="chess-knight">
+    Modern simplified pieces
+  </Card>
+</CardGroup>
+
+### Changing Piece Set
+
+```typescript
+import { useAtom } from 'jotai';
+import { pieceSetAtom } from '@/state/atoms';
+
+const [pieceSet, setPieceSet] = useAtom(pieceSetAtom);
+
+// Available piece sets
+const sets = [
+  'staunty', 'merida', 'alpha', 'california',
+  'cardinal', 'companion', 'cburnett', 'chess7',
+  'chessnut', 'disguised', 'dubrovny', 'fantasy',
+  'fresca', 'gioco', 'governor', 'horsey',
+  'icpieces', 'kosal', 'leipzig', 'letter',
+  'libra', 'maestro', 'pirouetti', 'pixel',
+  'reillycraig', 'riohacha', 'shapes', 'spatial',
+  'tatiana'
+];
+
+setPieceSet('merida');
+```
+
+## Board Appearance
+
+### Board Themes
+
+Customize the board appearance:
+
+```typescript
+interface BoardTheme {
+  lightSquare: string;   // Light square color (hex)
+  darkSquare: string;    // Dark square color (hex)
+  coordinates: boolean;  // Show file/rank labels
+  showLastMove: boolean; // Highlight last move
+  showLegalMoves: boolean; // Show legal move indicators
+}
+
+const boardTheme: BoardTheme = {
+  lightSquare: '#f0d9b5',
+  darkSquare: '#b58863',
+  coordinates: true,
+  showLastMove: true,
+  showLegalMoves: true
+};
+```
+
+### Highlight Colors
+
+Customize move highlighting:
+
+```typescript
+const highlightColors = {
+  lastMove: 'rgba(155, 199, 0, 0.41)',
+  check: 'rgba(255, 0, 0, 0.41)',
+  selected: 'rgba(20, 85, 30, 0.5)',
+  premove: 'rgba(20, 30, 85, 0.5)'
+};
+```
+
+## Sound Sets
+
+### Available Sounds
+
+The application includes multiple sound sets:
+
+- **Standard**: Classic chess sounds
+- **Nes**: Retro 8-bit sounds  
+- **Piano**: Musical note sounds
+- **Lisp**: Subtle electronic sounds
+- **Robot**: Futuristic sounds
+
+### Sound Events
+
+Sounds are played for:
+
+- **Move**: Regular piece moves
+- **Capture**: Piece captures
+- **Check**: Check notifications
+- **Castle**: Castling moves
+- **Promotion**: Pawn promotions
+- **Game End**: Checkmate, stalemate, or resignation
+- **Premove**: Premove execution
+- **Invalid**: Illegal move attempt
+
+### Configuring Sounds
+
+```typescript
+import { useAtom } from 'jotai';
+import { soundSetAtom, soundEnabledAtom, soundVolumeAtom } from '@/state/atoms';
+
+const [soundSet, setSoundSet] = useAtom(soundSetAtom);
+const [enabled, setEnabled] = useAtom(soundEnabledAtom);
+const [volume, setVolume] = useAtom(soundVolumeAtom);
+
+// Configure sounds
+setSoundSet('piano');
+setEnabled(true);
+setVolume(0.7);  // 70% volume
+```
+
+## Keyboard Shortcuts
+
+### Navigation
+
+<ResponseField name="Arrow Keys">
+  - **←/→**: Move backward/forward through game
+  - **↑**: Go to game start
+  - **↓**: Go to game end
+  - **Shift + ←/→**: Jump 10 moves
+</ResponseField>
+
+### Board Interaction
+
+<ResponseField name="Mouse">
+  - **Click + Drag**: Move pieces
+  - **Right Click**: Draw arrows
+  - **Shift + Right Click**: Draw circles
+  - **Alt + Click**: Alternative arrow color
+</ResponseField>
+
+### Analysis
+
+<ResponseField name="Engine Control">
+  - **Cmd/Ctrl + E**: Toggle engine analysis
+  - **Cmd/Ctrl + Shift + E**: Deep analysis
+  - **Cmd/Ctrl + R**: Reset position
+  - **Cmd/Ctrl + F**: Flip board
+</ResponseField>
+
+### Database
+
+<ResponseField name="Search & Filter">
+  - **Cmd/Ctrl + F**: Open search
+  - **Cmd/Ctrl + K**: Command palette
+  - **Cmd/Ctrl + ,**: Open settings
+  - **Esc**: Close dialogs/cancel operations
+</ResponseField>
+
+### Custom Shortcuts
+
+Coming soon: Fully customizable keyboard shortcuts.
+
+## UI Preferences
+
+### Layout Options
+
+<ParamField path="sidebarPosition" type="enum" default="left">
+  Sidebar position: `left` | `right`
+</ParamField>
+
+<ParamField path="boardSize" type="enum" default="auto">
+  Board size: `auto` | `small` | `medium` | `large` | `xlarge`
+</ParamField>
+
+<ParamField path="showEvalBar" type="boolean" default="true">
+  Show evaluation bar on board edge
+</ParamField>
+
+<ParamField path="showCapturedPieces" type="boolean" default="true">
+  Display captured pieces below board
+</ParamField>
+
+<ParamField path="animationSpeed" type="number" default="200">
+  Move animation duration in milliseconds (0-500)
+</ParamField>
+
+### Density
+
+Control UI information density:
+
+```typescript
+type Density = 'comfortable' | 'compact' | 'spacious';
+
+const [density, setDensity] = useAtom(densityAtom);
+
+// Affects:
+// - Padding/margins
+// - Font sizes  
+// - Line heights
+// - Component spacing
+setDensity('compact');  // More info on screen
+```
+
+## Persistence
+
+### Storage
+
+All customization settings are stored locally:
+
+```typescript
+// Using Jotai's atomWithStorage
+import { atomWithStorage } from 'jotai/utils';
+
+export const pieceSetAtom = atomWithStorage<string>('piece-set', 'staunty');
+export const currentThemeIdAtom = atomWithStorage<string>('current-theme-id', 'default');
+export const colorSchemeAtom = atomWithStorage<ColorScheme>('color-scheme', 'dark');
+```
+
+Settings are stored in:
+- **Browser**: `localStorage`
+- **Desktop**: Application data directory
+  - **macOS**: `~/Library/Application Support/com.luisrivasnoriega.ocs/`
+  - **Windows**: `%APPDATA%\com.luisrivasnoriega.ocs\`
+  - **Linux**: `~/.config/com.luisrivasnoriega.ocs/`
+
+### Reset to Defaults
+
+Reset all customization settings:
+
+```typescript
+import { useSetAtom } from 'jotai';
+import { RESET } from 'jotai/utils';
+
+const resetPieceSet = useSetAtom(pieceSetAtom);
+const resetTheme = useSetAtom(currentThemeIdAtom);
+const resetColorScheme = useSetAtom(colorSchemeAtom);
+
+// Reset individual settings
+resetPieceSet(RESET);
+resetTheme(RESET);
+resetColorScheme(RESET);
+
+// Or clear all localStorage
+localStorage.clear();
+```
+
+## Accessibility
+
+### High Contrast Mode
+
+For users with visual impairments:
+
+```typescript
+const highContrastTheme: Theme = {
+  // ...
+  autoContrast: true,
+  luminanceThreshold: 0.5,  // Higher = more contrast
+  colors: {
+    // WCAG AAA compliant colors
+  }
+};
+```
+
+### Keyboard Navigation
+
+<Note>
+All UI elements are keyboard accessible:
+- **Tab**: Navigate between elements
+- **Space/Enter**: Activate buttons
+- **Arrow keys**: Navigate lists and menus
+- **Esc**: Close dialogs
+</Note>
+
+### Screen Reader Support
+
+The application includes ARIA labels for screen readers:
+
+```tsx
+<button aria-label="Start engine analysis">
+  <EngineIcon />
+</button>
+
+<div role="region" aria-label="Chess board" tabIndex={0}>
+  {/* Board */}
+</div>
+```
+
+## Related
+
+- [Game Analysis](/guide/game-analysis)
+- [Profile Management](/guide/profiles)
+- [Keyboard Shortcuts Reference](/advanced/keyboard-shortcuts)

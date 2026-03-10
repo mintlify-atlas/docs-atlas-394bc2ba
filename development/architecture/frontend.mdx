@@ -1,0 +1,624 @@
+---
+title: Frontend Architecture
+description: React, TypeScript, and state management in Obsidian Chess Studio
+---
+
+## Overview
+
+The frontend is built with **React 19**, **TypeScript**, and **Vite**, providing a modern, performant user interface for chess analysis and game management.
+
+## Technology Stack
+
+<CardGroup cols={2}>
+  <Card title="Core Framework" icon="react">
+    - **React 19** - UI library
+    - **TypeScript** - Type safety
+    - **Vite 7** - Build tool & dev server
+    - **React Hooks** - State and effects
+  </Card>
+  
+  <Card title="UI Components" icon="palette">
+    - **Mantine UI 8** - Component library
+    - **Chessground** - Chess board rendering
+    - **Vanilla Extract** - CSS-in-JS
+    - **Tabler Icons** - Icon set
+  </Card>
+  
+  <Card title="State Management" icon="database">
+    - **Jotai** - Atomic state
+    - **Zustand** - Complex stores
+    - **TanStack Query** - Server state
+    - **React Context** - Local state
+  </Card>
+  
+  <Card title="Routing & Data" icon="route">
+    - **TanStack Router** - Type-safe routing
+    - **React Router** - Navigation
+    - **i18next** - Internationalization
+    - **Zod** - Runtime validation
+  </Card>
+</CardGroup>
+
+## Project Structure
+
+```
+src/
+├── components/            # Reusable UI components
+│   ├── Clock/             # Chess clock
+│   ├── GenericCard/       # Card wrapper
+│   ├── GenericHeader/     # Header component
+│   ├── icons/             # Custom icons
+│   └── panels/            # Main panels (database, analysis, etc.)
+├── features/              # Feature modules
+│   ├── boards/            # Chess board UI
+│   ├── dashboard/         # Statistics dashboard
+│   ├── databases/         # Database management
+│   ├── engines/           # Engine configuration
+│   ├── profiles/          # User profiles
+│   ├── settings/          # App settings
+│   └── variants/          # Repertoire training
+├── routes/                # Page components
+├── state/                 # State management
+│   ├── atoms.ts           # Jotai atoms
+│   ├── keybindings.ts     # Keyboard shortcuts
+│   └── store/             # Zustand stores
+├── utils/                 # Helper functions
+├── hooks/                 # Custom React hooks
+├── locales/               # i18n translations
+└── App.tsx                # Root component
+```
+
+## Component Architecture
+
+### Feature-Based Organization
+
+Each feature follows a **modular structure**:
+
+```
+features/boards/
+├── components/
+│   ├── BoardGame.tsx      # Main board component
+│   ├── BoardControls.tsx  # Control buttons
+│   └── MoveList.tsx       # Move notation display
+├── hooks/
+│   ├── useChessboard.ts   # Board state logic
+│   └── useEngineAnalysis.ts  # Engine integration
+├── __tests__/
+│   └── BoardGame.test.tsx
+└── index.ts               # Public exports
+```
+
+### Component Patterns
+
+<Tabs>
+  <Tab title="Functional Components">
+    All components use **functional components** with hooks:
+    
+    ```typescript
+    import { useState, useCallback } from 'react';
+    import { Button, Stack } from '@mantine/core';
+    
+    interface BoardControlsProps {
+      onFlip: () => void;
+      onReset: () => void;
+      disabled?: boolean;
+    }
+    
+    export function BoardControls({ onFlip, onReset, disabled }: BoardControlsProps) {
+      const [isFlipped, setIsFlipped] = useState(false);
+      
+      const handleFlip = useCallback(() => {
+        setIsFlipped(prev => !prev);
+        onFlip();
+      }, [onFlip]);
+      
+      return (
+        <Stack spacing="sm">
+          <Button onClick={handleFlip} disabled={disabled}>
+            Flip Board
+          </Button>
+          <Button onClick={onReset} disabled={disabled}>
+            Reset
+          </Button>
+        </Stack>
+      );
+    }
+    ```
+    
+    **Key patterns:**
+    - Named exports (no default exports)
+    - TypeScript interfaces for props
+    - `useCallback` for event handlers
+    - `useMemo` for expensive computations
+  </Tab>
+  
+  <Tab title="Custom Hooks">
+    Extract reusable logic into custom hooks:
+    
+    ```typescript
+    // hooks/useChessboard.ts
+    import { useState, useCallback } from 'react';
+    import { Chess } from 'chessops/chess';
+    import { parseFen } from 'chessops/fen';
+    
+    export function useChessboard(initialFen?: string) {
+      const [position, setPosition] = useState(() => {
+        if (initialFen) {
+          return parseFen(initialFen).unwrap();
+        }
+        return Chess.default();
+      });
+      
+      const makeMove = useCallback((move: Move) => {
+        setPosition(pos => {
+          const newPos = pos.clone();
+          newPos.play(move);
+          return newPos;
+        });
+      }, []);
+      
+      const reset = useCallback(() => {
+        setPosition(Chess.default());
+      }, []);
+      
+      return {
+        position,
+        makeMove,
+        reset,
+        fen: makeFen(position.toSetup()),
+      };
+    }
+    ```
+    
+    **Benefits:**
+    - Reusable across components
+    - Testable in isolation
+    - Clear separation of concerns
+  </Tab>
+  
+  <Tab title="Component Composition">
+    Build complex UIs by composing smaller components:
+    
+    ```typescript
+    // BoardGame.tsx
+    export function BoardGame({ gameId }: BoardGameProps) {
+      const { position, makeMove } = useChessboard();
+      const { evaluation } = useEngineAnalysis(position);
+      
+      return (
+        <Stack>
+          <BoardHeader evaluation={evaluation} />
+          
+          <Chessboard 
+            position={position}
+            onMove={makeMove}
+          />
+          
+          <BoardControls 
+            onFlip={() => {}} 
+            onReset={() => {}}
+          />
+          
+          <MoveList moves={position.moves} />
+        </Stack>
+      );
+    }
+    ```
+    
+    **Composition benefits:**
+    - Each component has single responsibility
+    - Easy to test individually
+    - Flexible and maintainable
+  </Tab>
+</Tabs>
+
+## State Management
+
+Obsidian Chess Studio uses a **multi-layered state management** approach.
+
+### Jotai Atoms (Global State)
+
+Used for **global application state** that persists across routes.
+
+```typescript
+// src/state/atoms.ts
+import { atom, atomWithStorage } from 'jotai';
+import { Engine } from '@/utils/engines';
+
+// Persisted atoms (saved to localStorage or file)
+export const enginesAtom = atomWithStorage<Engine[]>(
+  'engines/engines.json',
+  [],
+  fileStorage  // Custom file-based storage
+);
+
+export const tabsAtom = atomWithStorage<Tab[]>(
+  'tabs',
+  [],
+  sessionStorage  // Browser session storage
+);
+
+// Derived atoms
+export const activeEngineAtom = atom(
+  (get) => {
+    const engines = get(enginesAtom);
+    return engines.find(e => e.active);
+  }
+);
+
+// Write-only atoms
+export const addTabAtom = atom(
+  null,
+  (get, set, tab: Tab) => {
+    const tabs = get(tabsAtom);
+    set(tabsAtom, [...tabs, tab]);
+  }
+);
+```
+
+**Usage in components:**
+
+```typescript
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
+import { enginesAtom, activeEngineAtom } from '@/state/atoms';
+
+function EngineSelector() {
+  // Read and write
+  const [engines, setEngines] = useAtom(enginesAtom);
+  
+  // Read only (optimized)
+  const activeEngine = useAtomValue(activeEngineAtom);
+  
+  // Write only
+  const addTab = useSetAtom(addTabAtom);
+  
+  return (
+    <Select
+      data={engines.map(e => ({ value: e.id, label: e.name }))}
+      value={activeEngine?.id}
+    />
+  );
+}
+```
+
+### Zustand Stores (Complex State)
+
+Used for **complex state with middleware** (persistence, devtools).
+
+```typescript
+// src/state/store/tree.ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface TreeNode {
+  id: string;
+  move: string;
+  children: TreeNode[];
+}
+
+interface TreeStore {
+  root: TreeNode | null;
+  currentNode: TreeNode | null;
+  
+  // Actions
+  setRoot: (node: TreeNode) => void;
+  navigate: (nodeId: string) => void;
+  addMove: (move: string) => void;
+}
+
+export const useTreeStore = create<TreeStore>()(persist(
+  (set, get) => ({
+    root: null,
+    currentNode: null,
+    
+    setRoot: (node) => set({ root: node, currentNode: node }),
+    
+    navigate: (nodeId) => {
+      const node = findNodeById(get().root, nodeId);
+      if (node) set({ currentNode: node });
+    },
+    
+    addMove: (move) => {
+      const current = get().currentNode;
+      if (!current) return;
+      
+      const newNode: TreeNode = {
+        id: generateId(),
+        move,
+        children: [],
+      };
+      
+      current.children.push(newNode);
+      set({ currentNode: newNode });
+    },
+  }),
+  {
+    name: 'tree-storage',
+  }
+));
+```
+
+**Usage:**
+
+```typescript
+function RepertoireTree() {
+  const { root, currentNode, navigate } = useTreeStore();
+  
+  return (
+    <Tree
+      data={root}
+      selected={currentNode?.id}
+      onSelect={navigate}
+    />
+  );
+}
+```
+
+### TanStack Query (Server State)
+
+Used for **fetching and caching server data** from Tauri commands.
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
+
+// Fetch games
+export function useGames(filters: GameFilters) {
+  return useQuery({
+    queryKey: ['games', filters],
+    queryFn: () => invoke<Game[]>('search_games', { filters }),
+    staleTime: 5000,  // Cache for 5 seconds
+  });
+}
+
+// Import games
+export function useImportGames() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (file: string) => invoke('import_pgn', { file }),
+    onSuccess: () => {
+      // Invalidate games cache
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+    },
+  });
+}
+
+// Usage in component
+function GameList() {
+  const { data: games, isLoading, error } = useGames({ player: 'Magnus' });
+  const importGames = useImportGames();
+  
+  if (isLoading) return <Loader />;
+  if (error) return <Error message={error.message} />;
+  
+  return (
+    <>
+      <Button onClick={() => importGames.mutate('games.pgn')}>
+        Import PGN
+      </Button>
+      <Table data={games} />
+    </>
+  );
+}
+```
+
+## Routing
+
+### TanStack Router
+
+Obsidian Chess Studio uses **TanStack Router** for type-safe routing.
+
+```typescript
+// src/routes/__root.tsx
+import { createRootRoute, Outlet } from '@tanstack/react-router';
+import { AppShell } from '@mantine/core';
+
+export const Route = createRootRoute({
+  component: () => (
+    <AppShell>
+      <Outlet />  {/* Renders child routes */}
+    </AppShell>
+  ),
+});
+
+// src/routes/index.tsx
+import { createFileRoute } from '@tanstack/react-router';
+import { Dashboard } from '@/features/dashboard';
+
+export const Route = createFileRoute('/')( {
+  component: Dashboard,
+});
+
+// src/routes/games/$gameId.tsx
+import { createFileRoute } from '@tanstack/react-router';
+import { GameView } from '@/features/boards';
+
+export const Route = createFileRoute('/games/$gameId')({
+  component: GameView,
+  loader: async ({ params }) => {
+    // Load game data
+    return await invoke('get_game', { id: params.gameId });
+  },
+});
+```
+
+**Navigation:**
+
+```typescript
+import { useNavigate } from '@tanstack/react-router';
+
+function GameCard({ game }: GameCardProps) {
+  const navigate = useNavigate();
+  
+  return (
+    <Card onClick={() => navigate({ to: '/games/$gameId', params: { gameId: game.id } })}>
+      {game.white} vs {game.black}
+    </Card>
+  );
+}
+```
+
+## Tauri Integration
+
+### Invoking Backend Commands
+
+```typescript
+import { invoke } from '@tauri-apps/api/core';
+
+// Type-safe command invocation (types from bindings/)
+import type { Game, SearchFilters } from '@/bindings';
+
+// Search games
+const games = await invoke<Game[]>('search_games', {
+  filters: {
+    player: 'Magnus Carlsen',
+    minElo: 2800,
+  },
+});
+
+// Import PGN
+const result = await invoke<ImportResult>('import_pgn', {
+  filePath: '/path/to/games.pgn',
+});
+
+// Start engine
+await invoke('start_engine', {
+  engineId: 'stockfish-16',
+  options: { threads: 4, hash: 256 },
+});
+```
+
+### Event Listening
+
+```typescript
+import { listen } from '@tauri-apps/api/event';
+
+// Listen for engine analysis events
+const unlisten = await listen<AnalysisUpdate>('engine-analysis', (event) => {
+  const { depth, score, pv } = event.payload;
+  updateEvaluation({ depth, score, pv });
+});
+
+// Cleanup
+return () => unlisten();
+```
+
+### File System Operations
+
+```typescript
+import { open } from '@tauri-apps/plugin-dialog';
+import { readTextFile } from '@tauri-apps/plugin-fs';
+
+// Open file dialog
+const file = await open({
+  filters: [{ name: 'PGN Files', extensions: ['pgn'] }],
+});
+
+if (file) {
+  const content = await readTextFile(file.path);
+  // Process PGN content
+}
+```
+
+## Styling
+
+### Mantine UI Theme
+
+```typescript
+// App.tsx
+import { MantineProvider } from '@mantine/core';
+import { theme } from './styles/theme';
+
+function App() {
+  return (
+    <MantineProvider theme={theme}>
+      <RouterProvider router={router} />
+    </MantineProvider>
+  );
+}
+```
+
+### Vanilla Extract CSS
+
+```typescript
+// styles/board.css.ts
+import { style } from '@vanilla-extract/css';
+
+export const boardContainer = style({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(8, 1fr)',
+  aspectRatio: '1',
+  maxWidth: '600px',
+});
+
+export const square = style({
+  position: 'relative',
+  cursor: 'pointer',
+  
+  ':hover': {
+    opacity: 0.8,
+  },
+});
+
+// Usage
+import * as styles from './styles/board.css';
+
+function Board() {
+  return (
+    <div className={styles.boardContainer}>
+      {squares.map(sq => (
+        <div key={sq} className={styles.square} />
+      ))}
+    </div>
+  );
+}
+```
+
+## Performance Optimization
+
+<CardGroup cols={2}>
+  <Card title="Code Splitting" icon="scissors">
+    Vite automatically code-splits routes:
+    ```typescript
+    const GameView = lazy(() => import('./GameView'));
+    ```
+  </Card>
+  
+  <Card title="Memoization" icon="memory">
+    Use `useMemo` and `useCallback`:
+    ```typescript
+    const filtered = useMemo(
+      () => games.filter(g => g.elo > 2700),
+      [games]
+    );
+    ```
+  </Card>
+  
+  <Card title="Virtual Lists" icon="list">
+    Render large lists efficiently:
+    ```typescript
+    import { useVirtualizer } from '@tanstack/react-virtual';
+    ```
+  </Card>
+  
+  <Card title="Debouncing" icon="stopwatch">
+    Debounce search inputs:
+    ```typescript
+    import { useDebouncedValue } from '@mantine/hooks';
+    const [debounced] = useDebouncedValue(search, 300);
+    ```
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backend Architecture" href="/development/architecture/backend" icon="rust">
+    Learn about the Rust backend
+  </Card>
+  
+  <Card title="Database Schema" href="/development/architecture/database" icon="database">
+    Explore the database layer
+  </Card>
+</CardGroup>

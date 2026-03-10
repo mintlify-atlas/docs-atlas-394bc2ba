@@ -1,0 +1,324 @@
+---
+title: Multi-Engine Analysis
+description: Analyze positions with multiple chess engines simultaneously for comprehensive evaluation
+---
+
+## Overview
+
+Multi-engine analysis allows you to run multiple UCI engines simultaneously on the same position, providing diverse perspectives on the evaluation. This is particularly valuable when engines disagree, as it often indicates complex tactical or strategic nuances.
+
+## How It Works
+
+### Concurrent Engine Execution
+
+The application manages multiple engine processes concurrently using async runtime:
+
+```rust
+// src-tauri/src/chess/manager.rs:106
+tokio::spawn(async move {
+    // Each engine runs in its own background task
+    while let Ok(Some(line)) = reader.next_line().await {
+        // Process engine output
+    }
+});
+```
+
+### Engine Grouping
+
+Engines are grouped by tab and engine identifier:
+
+```rust
+let key = (tab.clone(), engine.clone());
+self.state.engine_processes.insert(key, process);
+```
+
+This allows:
+- Multiple engines per position
+- Independent configurations per engine
+- Automatic cleanup when switching positions
+
+## Setting Up Multi-Engine Analysis
+
+### Configure Multiple Engines
+
+To analyze with multiple engines, call the analysis command for each engine:
+
+```typescript
+// Analyze with Stockfish
+await invoke('get_best_moves', {
+  id: 'analysis-1',
+  engine: 'stockfish',
+  tab: 'board-1',
+  goMode: { t: 'Depth', c: 25 },
+  options: {
+    fen: position.fen,
+    moves: position.moves,
+    extraOptions: [
+      { name: 'Threads', value: '4' },
+      { name: 'Hash', value: '1024' }
+    ]
+  }
+});
+
+// Analyze with Lc0 (neural network)
+await invoke('get_best_moves', {
+  id: 'analysis-2',
+  engine: 'lc0',
+  tab: 'board-1',
+  goMode: { t: 'Depth', c: 25 },
+  options: {
+    fen: position.fen,
+    moves: position.moves,
+    extraOptions: [
+      { name: 'Threads', value: '2' },
+      { name: 'Backend', value: 'cuda-auto' }
+    ]
+  }
+});
+```
+
+## Comparing Engine Evaluations
+
+### Evaluation Output
+
+Each engine provides its own evaluation, which can be compared:
+
+<CodeGroup>
+```typescript Stockfish Output
+{
+  engine: "stockfish",
+  best_lines: [{
+    score: { value: { type: "cp", value: 150 } },
+    uciMoves: ["e2e4", "e7e5", "g1f3"],
+    depth: 25,
+    nodes: 5000000,
+    multipv: 1
+  }],
+  progress: 100
+}
+```
+
+```typescript Lc0 Output  
+{
+  engine: "lc0",
+  best_lines: [{
+    score: { 
+      value: { type: "cp", value: 120 },
+      wdl: [450, 500, 50]  // Win/Draw/Loss in per-mille
+    },
+    uciMoves: ["e2e4", "e7e5", "g1f3"],
+    depth: 25,
+    nodes: 2000000,
+    multipv: 1
+  }],
+  progress: 100
+}
+```
+</CodeGroup>
+
+### Evaluation Differences
+
+<Note>
+Engines may differ in evaluation for several reasons:
+- **Search algorithms**: Alpha-beta (Stockfish) vs. MCTS (Lc0)
+- **Evaluation functions**: Hand-crafted vs. neural network
+- **Tactical vs. strategic**: Stockfish excels at tactics, Lc0 at positional play
+- **Search depth**: Different node counts or depth reached
+</Note>
+
+## Progress Tracking
+
+### Real-Time Updates
+
+Each engine emits progress updates independently:
+
+```rust
+// src-tauri/src/chess/manager.rs:112
+let lim = governor::RateLimiter::direct(
+    governor::Quota::per_second(nonzero_ext::nonzero!(10u32))
+);
+
+if rate_limit_ok {
+    BestMovesPayload {
+        best_lines: proc.best_moves.clone(),
+        engine: id_cloned.clone(),
+        progress: (cur_depth as f64 / depth as f64) * 100.0,
+        // ...
+    }.emit(&app_cloned).ok();
+}
+```
+
+### Progress Calculation
+
+Progress is calculated based on the analysis mode:
+
+<ResponseField name="Depth Mode" type="percentage">
+  `(current_depth / target_depth) * 100`
+</ResponseField>
+
+<ResponseField name="Time Mode" type="percentage">
+  `(elapsed_time / target_time) * 100`
+</ResponseField>
+
+<ResponseField name="Nodes Mode" type="percentage">
+  `(nodes_searched / target_nodes) * 100`
+</ResponseField>
+
+<ResponseField name="Infinite Mode" type="fixed">
+  Always reports `99.99%` until stopped
+</ResponseField>
+
+## Engine Caching & Reconfiguration
+
+### Smart Engine Reuse
+
+The engine manager caches running processes and reuses them when possible:
+
+```rust
+// src-tauri/src/chess/manager.rs:60
+if self.state.engine_processes.contains_key(&key) {
+    let mut process = process.lock().await;
+    
+    // Return cached result if options match
+    if options == process.options && go_mode == process.go_mode {
+        return Ok(Some((process.last_progress, process.last_best_moves.clone())));
+    }
+    
+    // Otherwise, reconfigure the engine
+    process.stop().await?;
+    process.set_options(options).await?;
+    process.go(&go_mode).await?;
+}
+```
+
+### Reconfiguration Protection
+
+To prevent race conditions during reconfiguration:
+
+```rust
+if process.reconfiguring {
+    return Ok(None);  // Skip concurrent reconfigurations
+}
+process.reconfiguring = true;
+```
+
+## Advanced Use Cases
+
+### Multi-PV Analysis
+
+Combine multi-engine with multi-PV for comprehensive analysis:
+
+```typescript
+const engines = ['stockfish', 'komodo', 'lc0'];
+
+for (const engine of engines) {
+  await invoke('get_best_moves', {
+    id: `${engine}-analysis`,
+    engine,
+    tab: 'board-1',
+    goMode: { t: 'Depth', c: 30 },
+    options: {
+      fen: position.fen,
+      moves: position.moves,
+      extraOptions: [
+        { name: 'MultiPV', value: '3' }  // Show top 3 lines per engine
+      ]
+    }
+  });
+}
+```
+
+### Engine Comparison for Opening Prep
+
+Analyze critical opening positions with multiple engines:
+
+```typescript
+const criticalPosition = {
+  fen: 'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq -',
+  moves: ['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1c4', 'g8f6']
+};
+
+// Deep analysis with multiple engines
+const results = await Promise.all([
+  analyzeWithEngine('stockfish', criticalPosition, 35),
+  analyzeWithEngine('lc0', criticalPosition, 35),
+  analyzeWithEngine('komodo', criticalPosition, 35)
+]);
+
+// Compare evaluations
+const evaluations = results.map(r => r.best_lines[0].score);
+console.log('Engine evaluations:', evaluations);
+```
+
+## Performance Considerations
+
+### Resource Management
+
+<Warning>
+**CPU Usage**: Each engine consumes significant CPU resources. Running 3+ engines simultaneously may impact system performance.
+</Warning>
+
+<Tip>
+**Recommended Configuration**:
+- **2 engines**: Full thread count per engine  
+- **3 engines**: 50-75% threads per engine
+- **4+ engines**: Reduce threads to 25-50% per engine
+</Tip>
+
+### Memory Usage
+
+Each engine maintains its own hash table:
+
+```typescript
+// Distribute 4 GB RAM across 2 engines
+const engines = [
+  { name: 'stockfish', hash: 2048 },  // 2 GB
+  { name: 'lc0', hash: 2048 }         // 2 GB  
+];
+```
+
+### Rate Limiting
+
+Progress updates are rate-limited to prevent UI flooding:
+
+```rust
+let lim = governor::RateLimiter::direct(
+    governor::Quota::per_second(nonzero_ext::nonzero!(10u32))
+);
+```
+
+This ensures smooth UI updates even with multiple engines running.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="One Engine Slower Than Others">
+    This is normal. Different engines have different search characteristics:
+    - **Stockfish**: Very fast, high NPS (nodes per second)
+    - **Lc0**: Slower, lower NPS but deeper evaluation
+    - **Komodo**: Medium speed, balanced approach
+    
+    Consider using time-based analysis (`GoMode::Time`) instead of depth-based for synchronized completion.
+  </Accordion>
+
+  <Accordion title="System Slowdown with Multiple Engines">
+    Reduce resource allocation:
+    1. Lower thread count per engine
+    2. Reduce hash table size
+    3. Use fewer engines simultaneously
+    4. Consider analyzing positions sequentially instead of concurrently
+  </Accordion>
+
+  <Accordion title="Engines Showing Different Best Moves">
+    This is expected and valuable! Different engines have different playing styles:
+    - Stockfish favors concrete tactics
+    - Lc0 favors long-term positional play  
+    - Check both lines to understand the position fully
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [Engine Integration](/features/engine-integration)
+- [Opening Analysis](/features/opening-analysis)
+- [Game Analysis](/guide/game-analysis)

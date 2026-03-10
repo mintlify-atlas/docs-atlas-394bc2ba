@@ -1,0 +1,218 @@
+---
+title: "Introduction"
+description: "Learn about Obsidian Chess Studio and why it's the best open-source chess analysis platform"
+---
+
+## What is Obsidian Chess Studio?
+
+Obsidian Chess Studio (OCS) is a comprehensive, open-source chess analysis platform that combines powerful engine integration, advanced game analysis, and intelligent training systems into a single, cross-platform application. Built with Rust and Tauri for exceptional performance and reliability, it delivers professional-grade tools for serious chess players, coaches, and enthusiasts.
+
+The application provides deep game analysis with multi-engine support, automatic mistake detection, and detailed performance metrics. Its sophisticated database system enables exact and partial position searches across your entire game collection, while the opening repertoire trainer uses spaced repetition to help you master your chosen lines.
+
+<Note>
+  Obsidian Chess Studio is **100% free** and **open source** under the GPL-3.0 license. Your data stays on your device with local SQLite storage.
+</Note>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Multi-Engine Analysis" icon="brain">
+    Run multiple UCI-compatible chess engines simultaneously with real-time evaluation, configurable depth, and tablebase integration.
+  </Card>
+  <Card title="Game Database" icon="database">
+    Store millions of games with blazing-fast position search. Import from Lichess, Chess.com, or PGN files.
+  </Card>
+  <Card title="Opening Repertoire" icon="book-open">
+    Build and train opening repertoires with spaced repetition. Automatic variant book generation and gap analysis.
+  </Card>
+  <Card title="Player Statistics" icon="chart-line">
+    Track performance across platforms with detailed metrics: accuracy, rating progression, opening success, and pawn structures.
+  </Card>
+  <Card title="Puzzle Training" icon="puzzle-piece">
+    Adaptive puzzle system with custom Elo rating. Solve puzzles matched to your skill level.
+  </Card>
+  <Card title="Account Sync" icon="cloud-arrow-down">
+    Automatically sync games from Lichess and Chess.com accounts with OAuth integration.
+  </Card>
+</CardGroup>
+
+## Who Should Use OCS?
+
+<AccordionGroup>
+  <Accordion title="Serious Chess Players" icon="chess-knight">
+    OCS offers professional-grade analysis tools that rival commercial software. Analyze your games with multiple engines, identify patterns in your mistakes, and track your improvement over time. The multi-profile system lets you manage games from different accounts and time controls separately.
+  </Accordion>
+  
+  <Accordion title="Chess Coaches" icon="chalkboard-user">
+    Manage multiple student profiles, analyze their games, and identify specific areas for improvement. Use the detailed statistics to track student progress across different time controls and opening systems. Export annotated games for lessons.
+  </Accordion>
+  
+  <Accordion title="Chess Enthusiasts" icon="heart">
+    Build your personal game collection, explore master games from large databases, and improve through puzzle training. The opening repertoire trainer helps you memorize lines with spaced repetition.
+  </Accordion>
+  
+  <Accordion title="Opening Researchers" icon="magnifying-glass-chart">
+    Search for specific positions across your database, compare opening performance, and build comprehensive repertoires. The position search supports both exact FEN matching and partial position queries.
+  </Accordion>
+</AccordionGroup>
+
+## How Does OCS Compare?
+
+<Note>
+  This comparison focuses on desktop chess analysis software. We compare OCS with current versions of commercial and free alternatives.
+</Note>
+
+### vs. ChessBase
+
+ChessBase is the industry standard for professional chess analysis, but it comes with significant drawbacks:
+
+**Advantages of OCS:**
+- **Free and open source** vs. €499+ for ChessBase premium
+- **Cross-platform** (Windows, macOS, Linux, Android) vs. Windows only
+- **Modern, intuitive UI** vs. dated interface
+- **Automatic cloud sync** from Lichess/Chess.com built-in
+- **Active development** with frequent updates
+
+**ChessBase advantages:**
+- Larger pre-made databases available
+- More mature ecosystem of add-ons
+- Established professional support
+
+### vs. Lichess Analysis Board
+
+Lichess offers excellent free online analysis, but with limitations:
+
+**Advantages of OCS:**
+- **Offline functionality** - no internet required
+- **Multi-engine analysis** - run several engines simultaneously
+- **Large local databases** - search millions of games instantly
+- **Opening repertoire trainer** with spaced repetition
+- **Advanced position search** - exact and partial matching
+- **Pawn structure analysis** and detailed statistics
+
+**Lichess advantages:**
+- No installation required
+- Cloud storage
+- Built-in social features
+
+### vs. Arena Chess GUI
+
+Arena is a free UCI engine interface that's been around for decades:
+
+**Advantages of OCS:**
+- **Modern UI** with dark themes and customization
+- **Cross-platform** vs. Windows only
+- **Built-in database** with position search
+- **Player statistics** from online accounts
+- **Opening repertoire** training system
+- **Active development** with regular updates
+
+**Arena advantages:**
+- Very lightweight
+- Simple interface for engine-only analysis
+
+### vs. SCID
+
+SCID (Shane's Chess Information Database) is a popular open-source alternative:
+
+**Advantages of OCS:**
+- **Modern React/TypeScript frontend** vs. Tcl/Tk UI
+- **Built-in Stockfish** with automatic updates
+- **Account sync** from Lichess and Chess.com
+- **Adaptive puzzle system** with Elo rating
+- **Spaced repetition** for opening training
+- **Better performance** with Rust backend
+
+**SCID advantages:**
+- Extremely mature codebase
+- Very lightweight
+- Extensive documentation from decades of use
+
+## Technical Architecture
+
+OCS is built with modern, performant technologies:
+
+<Steps>
+  <Step title="Rust Backend">
+    High-performance backend written in Rust handles engine communication, database queries, and file operations with exceptional speed and memory safety.
+  </Step>
+  
+  <Step title="Tauri Framework">
+    Tauri provides a lightweight native application wrapper, resulting in small binary sizes and fast startup times compared to Electron.
+  </Step>
+  
+  <Step title="React Frontend">
+    Modern React 19 + TypeScript frontend with Mantine UI components provides a responsive, customizable interface.
+  </Step>
+  
+  <Step title="SQLite Database">
+    Local SQLite database with advanced indexing provides fast position searches across millions of games.
+  </Step>
+</Steps>
+
+## Cross-Platform Support
+
+OCS runs natively on all major platforms:
+
+| Platform | Format | Status |
+|----------|--------|--------|
+| **Windows** | `.exe` installer | ✅ Fully supported |
+| **macOS** | `.dmg` (Intel & Apple Silicon) | ✅ Fully supported |
+| **Linux** | `.AppImage`, `.deb`, `.rpm` | ✅ Fully supported |
+| **Android** | `.apk` | ⏳ Work in progress |
+
+<Tip>
+  All platforms share the same feature set. Your databases and settings can be synced across devices.
+</Tip>
+
+## Comprehensive Test Coverage
+
+OCS maintains high quality standards with extensive testing:
+
+**Frontend Tests:**
+- 173 test files with 307 passing tests
+- React component testing with user interaction simulation
+- Well-tested utilities and chess logic (96% coverage)
+
+**Backend Tests:**
+- 234 passing Rust tests
+- Database operations, position search, and PGN processing
+- Edge case and error handling coverage
+
+## Open Source & Community
+
+OCS is licensed under GPL-3.0 and welcomes contributions:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio">
+    View source code, report issues, and contribute
+  </Card>
+  <Card title="Discussions" icon="comments" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions">
+    Ask questions and share ideas with the community
+  </Card>
+</CardGroup>
+
+## Multi-Language Support
+
+OCS is available in 17 languages with active translation community:
+
+- 🇺🇸 English (100% complete)
+- 🇪🇸 Spanish (99% complete)
+- 🇩🇪 German, 🇫🇷 French, 🇮🇹 Italian, 🇯🇵 Japanese, and more
+
+<Note>
+  Want to help translate? See the [Contributing Guide](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/blob/main/CONTRIBUTING.md) for instructions.
+</Note>
+
+## Next Steps
+
+Ready to start using Obsidian Chess Studio?
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Download and install OCS on your platform
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Import your first game and start analyzing
+  </Card>
+</CardGroup>

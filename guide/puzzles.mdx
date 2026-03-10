@@ -1,0 +1,405 @@
+---
+title: Chess Puzzles
+description: Solve chess puzzles with adaptive difficulty, spaced repetition, and progress tracking
+---
+
+Obsidian Chess Studio includes a comprehensive puzzle training system with adaptive difficulty, theme filtering, and detailed performance tracking.
+
+## Getting Started with Puzzles
+
+<Steps>
+  <Step title="Navigate to Puzzle Board">
+    Open a new board and select **Puzzle** mode from the board tabs.
+  </Step>
+  
+  <Step title="Select Puzzle Database">
+    Choose a puzzle database from the dropdown:
+    - Default Lichess puzzle database (if downloaded)
+    - Custom puzzle databases
+    - Imported puzzle collections
+  </Step>
+  
+  <Step title="Configure Settings">
+    Set your preferences:
+    - Rating range
+    - Puzzle themes (if available)
+    - Difficulty mode (adaptive or fixed)
+  </Step>
+  
+  <Step title="Generate Puzzle">
+    Click **Generate Puzzle** to load your first challenge.
+  </Step>
+</Steps>
+
+## Solving Puzzles
+
+### How Puzzles Work
+
+1. **Initial Position**: The puzzle shows a position where you need to find the best move
+2. **Side to Move**: Look at whose turn it is (indicated on the board)
+3. **Make a Move**: Click or drag to make your move
+4. **Instant Feedback**:
+   - **Correct**: Green highlight, opponent responds, continue the sequence
+   - **Incorrect**: Red highlight, puzzle failed
+   - **Partial**: Yellow highlight for suboptimal but not losing moves
+
+### Puzzle Completion
+
+Puzzles are marked as:
+- **Complete**: All correct moves played
+- **Failed**: Wrong move played
+- **Incomplete**: Not yet attempted or abandoned
+
+<Note>
+  Most puzzles require finding a sequence of 2-5 moves, not just the first move. Follow through to the end for full credit.
+</Note>
+
+## Puzzle Settings
+
+### Rating Range
+
+Control the difficulty of puzzles:
+
+<Steps>
+  <Step title="Set Rating Range">
+    Use the slider to select minimum and maximum puzzle ratings:
+    - **1000-1500**: Beginner puzzles
+    - **1500-2000**: Intermediate puzzles
+    - **2000-2500**: Advanced puzzles
+    - **2500+**: Master-level puzzles
+  </Step>
+  
+  <Step title="Fixed or Adaptive">
+    Choose your difficulty mode:
+    - **Fixed Range**: Always get puzzles within your selected range
+    - **Adaptive Difficulty**: The range adjusts based on your performance
+  </Step>
+</Steps>
+
+### Adaptive Difficulty
+
+When enabled, the puzzle rating range automatically adjusts:
+
+- **Solving correctly**: Range increases gradually (harder puzzles)
+- **Failing puzzles**: Range decreases (easier puzzles)
+- **Mixed results**: Range stays stable
+
+<Note>
+  Adaptive difficulty uses your last 10 puzzle results to calculate the optimal range. Set your initial "player rating" in settings for best results.
+</Note>
+
+### Progressive Mode
+
+Enable **Progressive Puzzles** for a structured learning path:
+
+- Start with easier puzzles in your range
+- Gradually increase difficulty as you succeed
+- Build confidence before tackling harder positions
+- Track improvement over time
+
+### Hide Puzzle Rating
+
+Toggle **Hide Rating** to solve puzzles without seeing their difficulty:
+- Reduces psychological bias
+- Forces you to evaluate positions objectively
+- Makes training more realistic
+
+### Sequential Order
+
+Enable **In Order** to solve puzzles sequentially:
+- Useful for working through a curated puzzle set
+- Prevents random selection
+- Good for structured training programs
+
+## Puzzle Themes
+
+If your puzzle database includes themes, you can filter by tactical motifs:
+
+<Tabs>
+  <Tab title="Common Themes">
+    - **Fork**: Win material with a double attack
+    - **Pin**: Restrict piece movement
+    - **Skewer**: Attack two pieces in a line
+    - **Discovered Attack**: Uncover a powerful attack
+    - **Back Rank**: Exploit weak back rank
+    - **Deflection**: Lure a piece away from defense
+  </Tab>
+  
+  <Tab title="Strategic Themes">
+    - **Endgame**: Positions in the endgame phase
+    - **Middlegame**: Complex middlegame tactics
+    - **Opening**: Early game traps and tactics
+    - **Sacrifice**: Win by giving up material
+    - **Zugzwang**: Force opponent into bad moves
+  </Tab>
+  
+  <Tab title="Difficulty Themes">
+    - **One Move**: Simple one-move solutions
+    - **Short**: 2-3 move sequences
+    - **Long**: 4+ move combinations
+    - **Very Long**: Complex 6+ move puzzles
+  </Tab>
+</Tabs>
+
+### Filtering by Multiple Themes
+
+Select multiple themes to practice specific patterns:
+
+```
+Example: Fork + Knight
+= Puzzles involving knight forks
+
+Example: Endgame + Promotion
+= Endgame puzzles with pawn promotion
+```
+
+<Note>
+  Theme availability depends on your puzzle database. Lichess puzzles include comprehensive theme tagging.
+</Note>
+
+## Opening Tag Filters
+
+Filter puzzles by opening:
+
+- Practice tactics in your repertoire openings
+- Study specific opening traps
+- Focus on middlegames arising from your openings
+
+<Steps>
+  <Step title="Enable Opening Filter">
+    If your database has opening tags, select one or more openings.
+  </Step>
+  
+  <Step title="Generate Puzzles">
+    Puzzles will be from positions arising from those openings.
+  </Step>
+</Steps>
+
+## Puzzle Controls
+
+### Navigation
+
+- **Generate Puzzle**: Load a new puzzle
+- **Show Solution**: Reveal the correct move sequence
+- **Retry**: Reset the current puzzle to try again
+- **Clear Session**: Remove all puzzles from current session and start fresh
+
+### Jump to Next
+
+Enable **Jump to Next Puzzle** to automatically load the next puzzle after:
+- Completing a puzzle successfully
+- Failing a puzzle
+
+This creates a continuous training flow.
+
+### Puzzle History
+
+The challenge history panel shows:
+- All puzzles attempted in the current session
+- Ratings of each puzzle
+- Completion status (correct, failed, incomplete)
+- Click any puzzle to review it
+
+## Puzzle Statistics
+
+Track your performance:
+
+<CardGroup cols={2}>
+  <Card title="Current Puzzle" icon="puzzle-piece">
+    - Puzzle rating
+    - Themes (if available)
+    - Opening tag (if available)
+    - Attempts made
+  </Card>
+  
+  <Card title="Session Stats" icon="chart-bar">
+    - Total puzzles attempted
+    - Success rate (%)
+    - Average puzzle rating
+    - Current streak
+  </Card>
+  
+  <Card title="Overall Progress" icon="trophy">
+    - Total puzzles solved
+    - Best streak
+    - Average time per puzzle
+    - Improvement over time
+  </Card>
+  
+  <Card title="Theme Breakdown" icon="tags">
+    - Performance by theme
+    - Weakest themes
+    - Strongest themes
+    - Suggested focus areas
+  </Card>
+</CardGroup>
+
+## Spaced Repetition
+
+Puzzles you've solved are tracked with spaced repetition:
+
+- **New puzzles**: Never seen before
+- **Due for review**: Time to revisit based on past performance
+- **Learned**: Successfully solved multiple times
+
+<Note>
+  The spaced repetition system uses the FSRS algorithm to optimize review timing. Failed puzzles come up sooner, while mastered puzzles are reviewed less frequently.
+</Note>
+
+## Creating Custom Puzzle Databases
+
+<Steps>
+  <Step title="Click Add Puzzle Database">
+    From the puzzle settings panel, click **Add New**.
+  </Step>
+  
+  <Step title="Choose Creation Method">
+    <Tabs>
+      <Tab title="From PGN">
+        Import a PGN file with annotated puzzles:
+        - Each game is treated as a puzzle
+        - First move is the solution start
+        - Variations show correct continuations
+      </Tab>
+      
+      <Tab title="From Positions">
+        Manually add puzzle positions:
+        - Enter FEN for starting position
+        - Specify the correct move sequence
+        - Add themes and difficulty rating
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Name and Save">
+    Give your puzzle database a name and save it to disk.
+  </Step>
+</Steps>
+
+## Lichess Puzzle Integration
+
+Import Lichess puzzles for comprehensive training:
+
+<Steps>
+  <Step title="Download Lichess Puzzles">
+    Download the Lichess puzzle database (CSV format) from [database.lichess.org](https://database.lichess.org/#puzzles).
+  </Step>
+  
+  <Step title="Import to Obsidian Chess Studio">
+    Use the import tool to convert the CSV to a `.db3` puzzle database.
+  </Step>
+  
+  <Step title="Select Database">
+    Choose the Lichess puzzle database from the dropdown.
+  </Step>
+  
+  <Step title="Filter by Themes">
+    Use the comprehensive theme tags to focus your training.
+  </Step>
+</Steps>
+
+<Note>
+  The Lichess puzzle database contains over 3 million puzzles with themes, ratings, and opening tags.
+</Note>
+
+## Best Practices
+
+<Steps>
+  <Step title="Warm Up with Easy Puzzles">
+    Start your session with puzzles 100-200 points below your level to build confidence.
+  </Step>
+  
+  <Step title="Focus on Themes">
+    Dedicate sessions to specific themes where you're weak (e.g., pins, back rank).
+  </Step>
+  
+  <Step title="Think Before Moving">
+    Take time to calculate the full sequence before playing your first move.
+  </Step>
+  
+  <Step title="Review Failed Puzzles">
+    After failing, click "Show Solution" and understand why the correct move works.
+  </Step>
+  
+  <Step title="Track Your Progress">
+    Monitor your success rate and rating progression over time.
+  </Step>
+  
+  <Step title="Use Adaptive Mode">
+    Let the app adjust difficulty to keep you in the optimal learning zone.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### No Puzzles Generated
+
+<AccordionGroup>
+  <Accordion title="No Database Selected">
+    **Issue:** No puzzle database is chosen.
+    
+    **Solution:** Select a puzzle database from the dropdown.
+  </Accordion>
+  
+  <Accordion title="Rating Range Too Narrow">
+    **Issue:** No puzzles exist in your selected rating range.
+    
+    **Solution:** Expand the rating range or check database rating distribution.
+  </Accordion>
+  
+  <Accordion title="Theme Filter Too Restrictive">
+    **Issue:** Combining multiple themes leaves no matching puzzles.
+    
+    **Solution:** Remove some theme filters or try different combinations.
+  </Accordion>
+</AccordionGroup>
+
+### Puzzle Database Not Loading
+
+1. Verify the `.db3` file exists in the puzzles folder
+2. Check file permissions
+3. Try deleting and re-importing the database
+4. Look for error messages in the notification center
+
+### Incorrect Solution Marked Wrong
+
+- Some puzzles have multiple correct solutions
+- The database may only recognize one solution path
+- Check the puzzle source for alternative solutions
+- Report puzzle errors to the database maintainer
+
+## Training Recommendations
+
+### Daily Routine
+
+<Tabs>
+  <Tab title="Beginner (1000-1500)">
+    - 15-20 puzzles per day
+    - Focus on basic tactics (fork, pin, skewer)
+    - Rating range: 1000-1400
+    - Review all failed puzzles
+  </Tab>
+  
+  <Tab title="Intermediate (1500-2000)">
+    - 20-30 puzzles per day
+    - Mix of tactical themes
+    - Rating range: 1400-1900
+    - 70% success rate target
+  </Tab>
+  
+  <Tab title="Advanced (2000+)">
+    - 30-50 puzzles per day
+    - Complex combinations and endgames
+    - Rating range: 1900-2500+
+    - Focus on calculation depth
+  </Tab>
+</Tabs>
+
+### Weekly Goals
+
+- **Monday**: Tactical themes (forks, pins)
+- **Tuesday**: Endgame puzzles
+- **Wednesday**: Mixed review
+- **Thursday**: Opening traps and tactics
+- **Friday**: Complex combinations
+- **Weekend**: Review failed puzzles, free training

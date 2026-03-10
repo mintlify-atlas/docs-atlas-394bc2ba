@@ -1,0 +1,439 @@
+---
+title: Building from Source
+description: Step-by-step guide to building Obsidian Chess Studio on all platforms
+---
+
+## Prerequisites
+
+Before building Obsidian Chess Studio, ensure you have the required tools installed for your platform.
+
+### All Platforms
+
+<Steps>
+  <Step title="Install Node.js">
+    Download and install **Node.js 18+** from [nodejs.org](https://nodejs.org/)
+    
+    Verify installation:
+    ```bash
+    node --version
+    npm --version
+    ```
+  </Step>
+  
+  <Step title="Install pnpm">
+    Install the pnpm package manager:
+    ```bash
+    npm install -g pnpm@10.27.0
+    ```
+    
+    Verify installation:
+    ```bash
+    pnpm --version
+    ```
+  </Step>
+  
+  <Step title="Install Rust">
+    Install Rust via rustup:
+    ```bash
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    ```
+    
+    Verify installation:
+    ```bash
+    rustc --version
+    cargo --version
+    ```
+  </Step>
+</Steps>
+
+### Platform-Specific Prerequisites
+
+<Tabs>
+  <Tab title="Windows">
+    **Required:**
+    - **Microsoft C++ Build Tools** - Install from [Visual Studio](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+    - **WebView2** - Usually pre-installed on Windows 10/11
+    
+    **Install Visual Studio Build Tools:**
+    1. Download the Visual Studio Installer
+    2. Select "Desktop development with C++" workload
+    3. Install required components
+    
+    **Verify:**
+    ```powershell
+    # Check if build tools are available
+    where cl.exe
+    ```
+  </Tab>
+  
+  <Tab title="macOS">
+    **Required:**
+    - **Xcode Command Line Tools**
+    
+    **Install:**
+    ```bash
+    xcode-select --install
+    ```
+    
+    **Verify:**
+    ```bash
+    xcode-select -p
+    # Should output: /Library/Developer/CommandLineTools
+    ```
+    
+    <Note>
+      For Apple Silicon Macs, Rust will automatically compile for ARM64. 
+      For universal binaries, additional configuration is needed.
+    </Note>
+  </Tab>
+  
+  <Tab title="Linux">
+    **Required packages** (Debian/Ubuntu):
+    ```bash
+    sudo apt update
+    sudo apt install libwebkit2gtk-4.1-dev \
+      build-essential \
+      curl \
+      wget \
+      file \
+      libssl-dev \
+      libgtk-3-dev \
+      libayatana-appindicator3-dev \
+      librsvg2-dev
+    ```
+    
+    **Fedora/RHEL:**
+    ```bash
+    sudo dnf install webkit2gtk4.1-devel \
+      openssl-devel \
+      curl \
+      wget \
+      file \
+      libappindicator-gtk3-devel \
+      librsvg2-devel
+    ```
+    
+    **Arch Linux:**
+    ```bash
+    sudo pacman -Syu
+    sudo pacman -S --needed \
+      webkit2gtk \
+      base-devel \
+      curl \
+      wget \
+      file \
+      openssl \
+      appmenu-gtk-module \
+      gtk3 \
+      libappindicator-gtk3 \
+      librsvg
+    ```
+  </Tab>
+</Tabs>
+
+## Clone Repository
+
+Clone the repository and navigate to the project directory:
+
+```bash
+git clone git@github.com:luisrivasnoriega/Obsidian-Chess-Studio.git
+cd Obsidian-Chess-Studio
+```
+
+Or using HTTPS:
+
+```bash
+git clone https://github.com/luisrivasnoriega/Obsidian-Chess-Studio.git
+cd Obsidian-Chess-Studio
+```
+
+## Install Dependencies
+
+Install all frontend and backend dependencies:
+
+```bash
+pnpm install
+```
+
+This command:
+- Installs Node.js packages from `package.json`
+- Downloads Rust dependencies (first run only)
+- Sets up the development environment
+
+<Note>
+  **First run** may take several minutes as Cargo downloads and compiles Rust dependencies.
+</Note>
+
+## Development Mode
+
+Run the application in development mode with hot reload:
+
+```bash
+pnpm dev
+```
+
+This command:
+1. Starts Vite dev server on `http://127.0.0.1:1420`
+2. Compiles Rust backend in debug mode
+3. Launches the Tauri application
+4. Watches for file changes and auto-reloads
+
+<CodeGroup>
+```bash Standard Dev
+# Full dev mode (frontend + backend)
+pnpm dev
+```
+
+```bash Vite Only
+# Run Vite dev server without Tauri (for frontend-only development)
+pnpm start-vite
+```
+
+```bash Custom Tauri Command
+# Run specific Tauri command
+pnpm tauri dev
+```
+</CodeGroup>
+
+### Development Server Details
+
+- **Frontend:** Runs on port `1420` with hot module replacement (HMR)
+- **Backend:** Compiles with `opt-level = 0` for faster builds
+- **Auto-reload:** Changes to `.tsx`, `.ts`, `.rs` files trigger rebuild
+- **Debug logging:** Enabled by default in dev mode
+
+## Production Build
+
+Build optimized production binaries:
+
+<Tabs>
+  <Tab title="All Platforms">
+    ```bash
+    # Build with bundled installer (recommended)
+    pnpm tauri build
+    
+    # Build without installer (binary only)
+    pnpm build
+    # or
+    pnpm tauri build --no-bundle
+    ```
+    
+    **Build output locations:**
+    - **Windows:** `src-tauri/target/release/obsidian-chess-studio.exe`
+    - **macOS:** `src-tauri/target/release/bundle/dmg/`
+    - **Linux:** `src-tauri/target/release/obsidian-chess-studio`
+    
+    **Installers (with `pnpm tauri build`):**
+    - **Windows:** `.exe`, `.msi` in `src-tauri/target/release/bundle/`
+    - **macOS:** `.dmg`, `.app` in `src-tauri/target/release/bundle/`
+    - **Linux:** `.AppImage`, `.deb`, `.rpm` in `src-tauri/target/release/bundle/`
+  </Tab>
+  
+  <Tab title="Windows Specific">
+    **Build configurations:**
+    
+    ```bash
+    # Standard build
+    pnpm tauri build
+    
+    # Build for specific architecture
+    pnpm tauri build --target x86_64-pc-windows-msvc
+    pnpm tauri build --target aarch64-pc-windows-msvc
+    ```
+    
+    **Output:**
+    - `obsidian-chess-studio_x.x.x_x64_en-US.msi`
+    - `obsidian-chess-studio_x.x.x_x64-setup.exe`
+    
+    <Warning>
+      Windows builds use **thin LTO** to prevent linker errors. 
+      Build time: ~5-15 minutes depending on hardware.
+    </Warning>
+  </Tab>
+  
+  <Tab title="macOS Specific">
+    **Build universal binary (Intel + Apple Silicon):**
+    
+    ```bash
+    # Build for current architecture
+    pnpm tauri build
+    
+    # Build universal binary
+    pnpm tauri build --target universal-apple-darwin
+    ```
+    
+    **Output:**
+    - `obsidian-chess-studio_x.x.x_aarch64.dmg` (Apple Silicon)
+    - `obsidian-chess-studio_x.x.x_x64.dmg` (Intel)
+    - `obsidian-chess-studio_x.x.x_universal.dmg` (Universal)
+    
+    <Note>
+      **Code signing** is required for distribution. See [Tauri docs](https://tauri.app/distribute/sign/macos) for details.
+    </Note>
+  </Tab>
+  
+  <Tab title="Linux Specific">
+    **Build for different formats:**
+    
+    ```bash
+    # Build all formats (AppImage, deb, rpm)
+    pnpm tauri build
+    
+    # Build specific format
+    pnpm tauri build --bundles appimage
+    pnpm tauri build --bundles deb
+    pnpm tauri build --bundles rpm
+    ```
+    
+    **Output:**
+    - `obsidian-chess-studio_x.x.x_amd64.AppImage`
+    - `obsidian-chess-studio_x.x.x_amd64.deb`
+    - `obsidian-chess-studio-x.x.x-1.x86_64.rpm`
+    
+    **Install built package:**
+    ```bash
+    # AppImage
+    chmod +x obsidian-chess-studio_*.AppImage
+    ./obsidian-chess-studio_*.AppImage
+    
+    # Debian/Ubuntu
+    sudo dpkg -i obsidian-chess-studio_*.deb
+    
+    # Fedora/RHEL
+    sudo rpm -i obsidian-chess-studio-*.rpm
+    ```
+  </Tab>
+</Tabs>
+
+### Build Optimization
+
+Production builds use aggressive optimizations defined in `src-tauri/Cargo.toml`:
+
+```toml
+[profile.release]
+opt-level = 3          # Maximum optimization
+lto = "thin"           # Thin Link-Time Optimization
+codegen-units = 1      # Better optimization
+strip = true           # Remove debug symbols
+panic = "abort"        # Smaller binary
+```
+
+**Expected build times:**
+- **Debug build:** 2-5 minutes
+- **Release build:** 5-20 minutes
+- **First build:** Significantly longer due to dependency compilation
+
+## Docker Build
+
+Build using Docker for a consistent environment:
+
+<Steps>
+  <Step title="Build Docker Image">
+    ```bash
+    docker build -t obsidian-chess-studio .
+    ```
+  </Step>
+  
+  <Step title="Run Container">
+    ```bash
+    docker run -d --name obsidian-chess-studio-app obsidian-chess-studio
+    ```
+  </Step>
+  
+  <Step title="Extract Binary">
+    ```bash
+    docker cp obsidian-chess-studio-app:/output/obsidian-chess-studio ./obsidian-chess-studio
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Docker builds are primarily used for Linux targets. For Windows/macOS, native builds are recommended.
+</Note>
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Windows: 'link.exe' failed with exit code 1120">
+    **Solution:** This occurs with `lto = "fat"`. The project uses `lto = "thin"` by default.
+    
+    If you modified `Cargo.toml`, ensure:
+    ```toml
+    [profile.release]
+    lto = "thin"  # NOT "fat"
+    ```
+  </Accordion>
+  
+  <Accordion title="Linux: webkit2gtk not found">
+    **Solution:** Install WebKit2GTK development files:
+    ```bash
+    # Debian/Ubuntu
+    sudo apt install libwebkit2gtk-4.1-dev
+    
+    # Fedora
+    sudo dnf install webkit2gtk4.1-devel
+    ```
+  </Accordion>
+  
+  <Accordion title="macOS: 'xcode-select' error">
+    **Solution:** Install Xcode Command Line Tools:
+    ```bash
+    xcode-select --install
+    ```
+    
+    If already installed, reset the path:
+    ```bash
+    sudo xcode-select --reset
+    ```
+  </Accordion>
+  
+  <Accordion title="pnpm install fails">
+    **Solution:** Clear pnpm cache and retry:
+    ```bash
+    pnpm store prune
+    pnpm install --force
+    ```
+  </Accordion>
+  
+  <Accordion title="Cargo build fails with 'linker not found'">
+    **Solution:** 
+    - **Windows:** Install Visual Studio Build Tools
+    - **Linux:** Install `build-essential` or `base-devel`
+    - **macOS:** Install Xcode Command Line Tools
+  </Accordion>
+</AccordionGroup>
+
+### Performance Optimization
+
+To speed up development builds:
+
+```bash
+# Use mold linker (Linux only, much faster)
+cargo install mold
+export RUSTFLAGS="-C link-arg=-fuse-ld=mold"
+
+# Enable parallel frontend builds
+export VITE_BUILD_PARALLEL=true
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Project Structure" href="/development/project-structure" icon="folder-tree">
+    Understand the codebase organization
+  </Card>
+  
+  <Card title="Contributing" href="/development/contributing" icon="code-pull-request">
+    Learn how to contribute code
+  </Card>
+  
+  <Card title="Testing" href="/development/testing" icon="flask">
+    Run tests and add new ones
+  </Card>
+  
+  <Card title="Architecture" href="/development/architecture/frontend" icon="diagram-project">
+    Deep dive into the architecture
+  </Card>
+</CardGroup>

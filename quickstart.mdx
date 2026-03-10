@@ -1,80 +1,453 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Quick Start"
+description: "Get started with Obsidian Chess Studio in minutes - import games, analyze positions, and improve your chess"
 ---
 
-## Get started in three steps
+## Welcome to Obsidian Chess Studio!
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+This guide will walk you through your first session: importing a game, analyzing it with a chess engine, and viewing the evaluation. In just 5 minutes, you'll be ready to analyze all your games.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **Prerequisites:** Make sure you've [installed Obsidian Chess Studio](/installation) and completed the first-launch setup.
+</Note>
+
+## Your First Analysis Session
+
+<Steps>
+  <Step title="Import a game">
+    Let's start by loading a game to analyze. You have three options:
+    
+    ### Option 1: Import from Lichess
+    
+    <Accordion title="Import a Lichess game" icon="chess-board">
+      1. Go to [lichess.org](https://lichess.org) and play a game (or find an existing one)
+      2. Copy the game URL (e.g., `https://lichess.org/AbCdEfGh`)
+      3. In OCS, click **File** → **Import Game** → **From Lichess**
+      4. Paste the URL or enter the game ID
+      5. Click **Import**
+      
+      The game loads instantly with all moves, time controls, and player information.
+      
+      <Tip>
+        You can also sync all games automatically. Go to **Profiles** → **Add Account** → **Lichess** and sign in with OAuth.
+      </Tip>
+    </Accordion>
+    
+    ### Option 2: Import from Chess.com
+    
+    <Accordion title="Import a Chess.com game" icon="chess">
+      1. Go to [chess.com](https://chess.com) and find a game
+      2. Copy the game URL (e.g., `https://www.chess.com/game/live/123456789`)
+      3. In OCS, click **File** → **Import Game** → **From Chess.com**
+      4. Paste the URL
+      5. Click **Import**
+      
+      The game is fetched and converted to PGN format automatically.
+      
+      <Tip>
+        Link your Chess.com account in **Profiles** to auto-sync all your games.
+      </Tip>
+    </Accordion>
+    
+    ### Option 3: Import PGN file
+    
+    <Accordion title="Import a PGN file" icon="file-import">
+      If you have games in PGN format:
+      
+      1. Click **File** → **Import PGN** (or press the keyboard shortcut)
+      2. Select your PGN file
+      3. Choose which games to import (if file contains multiple games)
+      4. Click **Import**
+      
+      <CodeGroup>
+      ```pgn Example PGN
+      [Event "Rated Blitz game"]
+      [Site "https://lichess.org/abc123"]
+      [White "PlayerOne"]
+      [Black "PlayerTwo"]
+      [Result "1-0"]
+      [UTCDate "2024.03.10"]
+      [UTCTime "12:00:00"]
+      [WhiteElo "1800"]
+      [BlackElo "1790"]
+      [TimeControl "300+3"]
+      
+      1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 
+      6. Re1 b5 7. Bb3 d6 8. c3 O-O 9. h3 Nb8 10. d4 Nbd7
+      11. Nbd2 Bb7 12. Bc2 Re8 13. Nf1 Bf8 14. Ng3 g6 1-0
+      ```
+      </CodeGroup>
+      
+      <Tip>
+        You can paste PGN text directly! Go to **Info** panel → **PGN** tab → paste → **Update**.
+      </Tip>
+    </Accordion>
+    
+    ---
+    
+    Once imported, you'll see:
+    - The game board with the starting position
+    - Move list on the right
+    - Game information (players, ratings, time control)
+  </Step>
+  
+  <Step title="Navigate through the game">
+    Before analyzing, familiarize yourself with the board controls:
+    
+    **Keyboard shortcuts:**
+    - **Arrow Right** or **Space**: Next move
+    - **Arrow Left**: Previous move
+    - **Arrow Up**: Go to start
+    - **Arrow Down**: Go to end
+    
+    **Mouse controls:**
+    - Click moves in the notation panel to jump to that position
+    - Use the navigation buttons below the board
+    - Scroll the move list
+    
+    <Tip>
+      Right-click on the board to draw arrows and highlight squares. This is great for adding visual annotations!
+    </Tip>
+    
+    Try navigating through your imported game now. Get comfortable moving back and forth through the moves.
+  </Step>
+  
+  <Step title="Enable engine analysis">
+    Now let's see what the engine thinks about each position:
+    
+    1. **Open the Analysis panel** (usually on the right side, or click **View** → **Analysis**)
+    2. **Toggle the engine on** by clicking the engine button or pressing the hotkey
+    3. You should immediately see:
+       - **Evaluation bar** showing position assessment
+       - **Best move** suggestions with piece arrows on the board
+       - **Principal variation** (sequence of best moves)
+       - **Depth** and **nodes per second** (engine performance metrics)
+    
+    <CodeGroup>
+    ```plaintext Example Engine Output
+    Stockfish 18 [Depth 28]
+    
+    +1.2  →  1. Nf3 Nf6 2. c4 e6 3. g3 d5 4. Bg2
+    +0.8  →  1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Nf3
+    +0.7  →  1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4
+    ```
+    </CodeGroup>
+    
+    **Understanding the evaluation:**
+    - **Positive numbers** (e.g., +1.2): White is better
+    - **Negative numbers** (e.g., -0.8): Black is better
+    - **0.0**: Position is equal
+    - **M5**: Checkmate in 5 moves
+    
+    <Note>
+      Each "pawn" of advantage (1.0) is significant. A 2.0 advantage is usually winning at high levels.
+    </Note>
+  </Step>
+  
+  <Step title="Analyze the position deeply">
+    Let's explore the analysis features:
+    
+    ### View multiple engine lines
+    
+    1. Go to **Analysis panel** → **Settings**
+    2. Increase **Multi-PV** (principal variations) to 3-5
+    3. Now you'll see the engine's top 3-5 move suggestions simultaneously
+    
+    This is excellent for comparing candidate moves!
+    
+    ### Adjust engine depth
+    
+    For critical positions, you can force deeper analysis:
+    
+    1. In Analysis settings, set **Analysis mode** to **Infinite**
+    2. Or set a specific **Depth limit** (e.g., 30)
+    3. The engine will analyze deeper until stopped
+    
+    <Warning>
+      Deep analysis uses significant CPU. Your computer may slow down. Reduce threads or hash memory if needed.
+    </Warning>
+    
+    ### Check tablebase positions
+    
+    In endgames with ≤7 pieces, OCS can query online tablebases:
+    
+    1. Navigate to an endgame position
+    2. The **Tablebase** section shows if the position is winning/drawing/losing
+    3. You'll see "DTZ" (distance to zeroing move) and "DTM" (distance to mate)
+    
+    <Tip>
+      Tablebases provide **perfect play** for endgames. If it says "Win in 12", there's a forced win in 12 moves!
+    </Tip>
+  </Step>
+  
+  <Step title="Review your mistakes">
+    Let's generate a full game analysis report:
+    
+    1. Click **Analysis** → **Generate Report**
+    2. Configure report settings:
+       - Analysis depth (higher = more accurate but slower)
+       - Time per position
+       - Mistake thresholds (what counts as inaccuracy/mistake/blunder)
+    3. Click **Analyze Game**
+    4. Wait for analysis to complete (depends on game length and settings)
+    
+    Once done, you'll see:
+    
+    **Visual Evaluation Chart:**
+    - Graph showing position evaluation throughout the game
+    - Steep drops = mistakes/blunders
+    - Hover for specific move and evaluation change
+    
+    **Mistake Classification:**
+    - **Inaccuracies** (!?): Evaluation loss of 0.3-1.0 pawns
+    - **Mistakes** (?): Evaluation loss of 1.0-2.0 pawns  
+    - **Blunders** (??): Evaluation loss of 2.0+ pawns
+    
+    **Performance Metrics:**
+    - Accuracy percentage for White and Black
+    - Average centipawn loss (ACPL)
+    - Estimated Elo based on play quality
+    
+    <CodeGroup>
+    ```plaintext Example Report
+    Game Analysis: PlayerOne vs PlayerTwo
+    
+    White (PlayerOne):
+    - Accuracy: 87.3%
+    - ACPL: 23
+    - Estimated Elo: 1850
+    - Inaccuracies: 3
+    - Mistakes: 1
+    - Blunders: 0
+    
+    Black (PlayerTwo):
+    - Accuracy: 72.1%
+    - ACPL: 45
+    - Estimated Elo: 1600
+    - Inaccuracies: 5
+    - Mistakes: 2
+    - Blunders: 1
+    
+    Critical moments:
+    Move 14: ...Nxe4? (Blunder, -1.2 → -3.5)
+    Move 22: Rxe7? (Mistake, +2.8 → +1.3)
+    ```
+    </CodeGroup>
+    
+    <Tip>
+      Click on any mistake in the report to jump to that position and see what you should have played.
+    </Tip>
+  </Step>
+  
+  <Step title="Save and organize your analysis">
+    Don't lose your work! Save the analyzed game:
+    
+    1. Click **File** → **Save Game**
+    2. The game is saved to your profile's database
+    3. Add the game to **Favorites** for easy access later
+    
+    **Adding notes and annotations:**
+    - Right-click any move → **Add comment**
+    - Type your thoughts about the position
+    - Use annotation symbols: !, !!, !?, ?!, ?, ??
+    - Add variations: Make moves in analysis mode to create variation branches
+    
+    **Exporting:**
+    - Export to PGN with all annotations: **File** → **Export PGN**
+    - Share on Lichess: **File** → **Share** → **Lichess**
+    - Export position as FEN: **Edit** → **Copy FEN**
+  </Step>
+</Steps>
+
+## What's Next?
+
+Congratulations! You've completed your first analysis session. Here are some next steps:
+
+<CardGroup cols={2}>
+  <Card title="Sync Your Accounts" icon="cloud-arrow-down" href="/guide/profiles">
+    Link Lichess and Chess.com accounts to auto-import all your games
+  </Card>
+  
+  <Card title="Build Opening Repertoire" icon="book-open" href="/guide/opening-repertoire">
+    Create and train your opening lines with spaced repetition
+  </Card>
+  
+  <Card title="Solve Puzzles" icon="puzzle-piece" href="/guide/puzzles">
+    Improve tactics with adaptive puzzle training
+  </Card>
+  
+  <Card title="Manage Databases" icon="database" href="/guide/database-management">
+    Download large game databases and search for positions
+  </Card>
+</CardGroup>
+
+## Tips for Better Analysis
+
+<AccordionGroup>
+  <Accordion title="Optimize Engine Performance" icon="gauge-high">
+    Get the most out of Stockfish:
+    
+    **Threads:** Set to your CPU core count - 1 (leave one core for the system)
+    - Settings → Engines → Stockfish 18 → Threads
+    - Example: 8-core CPU → set to 7 threads
+    
+    **Hash Memory:** Allocate more RAM for faster analysis
+    - Minimum: 128 MB
+    - Recommended: 2048 MB (2 GB)
+    - Maximum: 4096+ MB for deep analysis
+    
+    **Multi-PV:** Balance between detail and speed
+    - 1 line: Fastest, shows only best move
+    - 3 lines: Good balance for most analysis
+    - 5+ lines: Detailed but slower
+  </Accordion>
+  
+  <Accordion title="Focus on Critical Positions" icon="bullseye">
+    Don't analyze every move equally:
+    
+    **When to analyze deeply:**
+    - Positions where you were unsure
+    - Turning points (evaluation swings)
+    - Complex tactical positions
+    - Endgames with multiple candidate moves
+    
+    **When to skip:**
+    - Obvious forced sequences
+    - Simple opening theory
+    - Clearly winning/losing positions
+    - Time scrambles (focus on time management instead)
+  </Accordion>
+  
+  <Accordion title="Use Multiple Engines" icon="brain">
+    Compare opinions from different engines:
+    
+    1. Go to **Settings** → **Engines** → **Add Engine**
+    2. Install additional engines (Leela, Komodo, etc.)
+    3. Enable multiple engines in the Analysis panel
+    4. Compare evaluations - sometimes engines disagree!
+    
+    <Tip>
+      Stockfish is best for tactical positions, while neural network engines (Leela) excel at positional understanding.
+    </Tip>
+  </Accordion>
+  
+  <Accordion title="Understand Computer Suggestions" icon="graduation-cap">
+    Don't blindly follow the engine:
+    
+    **Ask yourself:**
+    - *Why* is this move best?
+    - What is the engine's plan?
+    - Is this practical in a real game?
+    - Does it fit my playing style?
+    
+    **Engine limitations:**
+    - May prefer technically best moves that are hard to play
+    - Doesn't account for opponent's tendencies
+    - Can't explain *why* a move is good
+    
+    Your job is to understand the position, not memorize engine moves!
+  </Accordion>
+</AccordionGroup>
+
+## Common Tasks
+
+<AccordionGroup>
+  <Accordion title="Analyze a specific position" icon="chess-board">
+    To analyze a position without a full game:
+    
+    1. Go to **Analysis** board
+    2. Set up the position:
+       - **Edit** → **Setup Position**
+       - Drag pieces to squares
+       - Set side to move, castling rights, en passant
+    3. Or paste FEN: **Edit** → **Paste FEN**
+    4. Enable engine analysis
+    
+    <CodeGroup>
+    ```plaintext Example FEN
+    rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1
+    ```
+    </CodeGroup>
+  </Accordion>
+  
+  <Accordion title="Compare your move with engine's suggestion" icon="code-compare">
+    After making a move:
+    
+    1. Note the evaluation before your move
+    2. Make your move
+    3. Check the new evaluation
+    4. If it dropped significantly, click the engine's suggested move
+    5. See the continuation to understand why it's better
+    
+    This is the core of learning from analysis!
+  </Accordion>
+  
+  <Accordion title="Search for similar positions" icon="magnifying-glass">
+    Found an interesting position? Search your database:
+    
+    1. Navigate to the position
+    2. Click **Database** panel → **Search Position**
+    3. Choose search type:
+       - **Exact position**: FEN must match exactly
+       - **Position with colors**: Same pieces, any location
+       - **Material pattern**: Just piece count and types
+    4. See all games with this position
+    5. Study how masters played from here
+  </Accordion>
+</AccordionGroup>
+
+## Keyboard Shortcuts
+
+Speed up your workflow with these essential shortcuts:
+
+| Action | Shortcut |
+|--------|----------|
+| Next move | **→** or **Space** |
+| Previous move | **←** |
+| Go to start | **↑** or **Home** |
+| Go to end | **↓** or **End** |
+| Toggle engine | **E** |
+| Flip board | **F** |
+| Copy FEN | **Ctrl/Cmd + Shift + C** |
+| Import PGN | **Ctrl/Cmd + I** |
+| New game | **Ctrl/Cmd + N** |
+
+<Tip>
+  Customize all shortcuts in **Settings** → **Keybindings**. Create your own perfect workflow!
+</Tip>
+
+## Getting Help
+
+Stuck or have questions?
+
+<CardGroup cols={2}>
+  <Card title="User Guide" icon="book" href="/guide/profiles">
+    Comprehensive documentation for all features
+  </Card>
+  
+  <Card title="FAQ" icon="question" href="/community/faq">
+    Answers to frequently asked questions
+  </Card>
+  
+  <Card title="GitHub Discussions" icon="comments" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions">
+    Ask the community for help
+  </Card>
+  
+  <Card title="Report Issues" icon="bug" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues">
+    Found a bug? Let us know!
+  </Card>
+</CardGroup>
+
+## Join the Community
+
+Obsidian Chess Studio is open source and community-driven:
+
+- ⭐ **Star the project** on [GitHub](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio)
+- 💬 **Join discussions** and share ideas
+- 🌍 **Help translate** to your language
+- 🐛 **Report bugs** and suggest features
+- 💻 **Contribute code** if you're a developer
+
+<Note>
+  OCS is free and will always remain free. Built by chess players, for chess players.
 </Note>

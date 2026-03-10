@@ -1,0 +1,375 @@
+---
+title: Keyboard Shortcuts
+description: Complete guide to keyboard shortcuts in Obsidian Chess Studio
+icon: keyboard
+---
+
+Obsidian Chess Studio provides extensive keyboard shortcuts to help you navigate and analyze games efficiently. All shortcuts are fully customizable.
+
+## Platform-Specific Keys
+
+<Note>
+  The `mod` key refers to:
+  - **macOS**: ⌘ Command
+  - **Windows/Linux**: Ctrl
+</Note>
+
+## File Operations
+
+<AccordionGroup>
+  <Accordion title="File Management">
+    | Shortcut | Action | Key ID |
+    |----------|--------|--------|
+    | `mod+o` | Open File | `OPEN_FILE` |
+    | `mod+s` | Save File | `SAVE_FILE` |
+    | `mod+r` | Reload App | `APP_RELOAD` |
+    | `mod+q` | Exit App | `EXIT_APP` |
+    | `mod+i` | Import Board | `IMPORT_BOARD` |
+    | `mod+e` | Export Game | `EXPORT_GAME` |
+  </Accordion>
+
+  <Accordion title="Copy & Paste">
+    | Shortcut | Action | Key ID |
+    |----------|--------|--------|
+    | `mod+shift+f` | Copy FEN | `COPY_FEN` |
+    | `mod+shift+c` | Copy PGN | `COPY_PGN` |
+    | `mod+shift+v` | Paste FEN | `PASTE_FEN` |
+  </Accordion>
+</AccordionGroup>
+
+## Navigation
+
+### Move Navigation
+
+Navigate through game moves efficiently:
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `→` | Next Move | `NEXT_MOVE` |
+| `←` | Previous Move | `PREVIOUS_MOVE` |
+| `↑` | Go to Branch Start | `GO_TO_BRANCH_START` |
+| `↓` | Go to Branch End | `GO_TO_BRANCH_END` |
+| `shift+↑` | Go to Game Start | `GO_TO_START` |
+| `shift+↓` | Go to Game End | `GO_TO_END` |
+| `shift+→` | Next Branching Point | `NEXT_BRANCHING` |
+| `shift+←` | Previous Branching Point | `PREVIOUS_BRANCHING` |
+| `n` | Next Branch | `NEXT_BRANCH` |
+| `p` | Previous Branch | `PREVIOUS_BRANCH` |
+| `mod+g` | Jump to Move | `JUMP_TO_MOVE` |
+| `mod+shift+g` | Go to Position Number | `GO_TO_POSITION_NUMBER` |
+
+<Tip>
+  Use `shift+↑/↓` to quickly jump to the beginning or end of a game, then use arrow keys for precise navigation.
+</Tip>
+
+### Game Browsing
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `PageUp` | Previous Game | `PREVIOUS_GAME` |
+| `PageDown` | Next Game | `NEXT_GAME` |
+
+### Application Navigation
+
+<AccordionGroup>
+  <Accordion title="Primary Sections">
+    | Shortcut | Action | Key ID |
+    |----------|--------|--------|
+    | `mod+shift+d` | Go to Dashboard | `GO_TO_DASHBOARD` |
+    | `mod+shift+p` | Go to Profiles | `GO_TO_PROFILES` |
+    | `mod+shift+b` | Go to Databases | `GO_TO_DATABASES` |
+  </Accordion>
+
+  <Accordion title="Board Modes">
+    | Shortcut | Action | Key ID |
+    |----------|--------|--------|
+    | `mod+1` | Play Board | `PLAY_BOARD` |
+    | `mod+2` | Analyze Board | `ANALYZE_BOARD` |
+    | `mod+3` | Train Board | `TRAIN_BOARD` |
+  </Accordion>
+
+  <Accordion title="Secondary Sections">
+    | Shortcut | Action | Key ID |
+    |----------|--------|--------|
+    | `mod+alt+e` | Go to Engines | `GO_TO_ENGINES` |
+    | `mod+alt+f` | Go to Files | `GO_TO_FILES` |
+    | `mod+alt+t` | Go to Tournaments | `GO_TO_TOURNAMENTS` |
+  </Accordion>
+</AccordionGroup>
+
+## Board Management
+
+### Board Tabs
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `mod+t` | New Board Tab | `NEW_BOARD_TAB` |
+| `mod+w` | Close Board Tab | `CLOSE_BOARD_TAB` |
+| `ctrl+tab` | Cycle Board Tabs | `CYCLE_BOARD_TABS` |
+| `ctrl+shift+tab` | Reverse Cycle Tabs | `REVERSE_CYCLE_BOARD_TABS` |
+| `mod+shift+t` | Duplicate Tab | `DUPLICATE_TAB` |
+| `mod+n` | New Game | `NEW_GAME` |
+
+### Direct Tab Access
+
+<Tip>
+  Jump directly to specific tabs using `ctrl+alt+[1-9]`:
+</Tip>
+
+| Shortcut | Tab | Key ID |
+|----------|-----|--------|
+| `ctrl+alt+1` | Board Tab 1 | `BOARD_TAB_ONE` |
+| `ctrl+alt+2` | Board Tab 2 | `BOARD_TAB_TWO` |
+| `ctrl+alt+3` | Board Tab 3 | `BOARD_TAB_THREE` |
+| `ctrl+alt+4` | Board Tab 4 | `BOARD_TAB_FOUR` |
+| `ctrl+alt+5` | Board Tab 5 | `BOARD_TAB_FIVE` |
+| `ctrl+alt+6` | Board Tab 6 | `BOARD_TAB_SIX` |
+| `ctrl+alt+7` | Board Tab 7 | `BOARD_TAB_SEVEN` |
+| `ctrl+alt+8` | Board Tab 8 | `BOARD_TAB_EIGHT` |
+| `ctrl+alt+9` | Last Board Tab | `BOARD_TAB_LAST` |
+
+## Analysis & Annotations
+
+### Move Annotations
+
+Quickly annotate moves with standard chess symbols:
+
+| Shortcut | Symbol | Meaning | Key ID |
+|----------|--------|---------|--------|
+| `ctrl+1` | ‼️ | Brilliant Move | `ANNOTATION_BRILLIANT` |
+| `ctrl+2` | ❗ | Good Move | `ANNOTATION_GOOD` |
+| `ctrl+3` | ⁉️ | Interesting Move | `ANNOTATION_INTERESTING` |
+| `ctrl+4` | ⁉️ | Dubious Move | `ANNOTATION_DUBIOUS` |
+| `ctrl+5` | ❓ | Mistake | `ANNOTATION_MISTAKE` |
+| `ctrl+6` | ❓❓ | Blunder | `ANNOTATION_BLUNDER` |
+
+<CodeGroup>
+```typescript Example Usage
+// After making a move, press ctrl+2 to mark it as a good move
+// This is equivalent to adding the "!" annotation in PGN
+```
+</CodeGroup>
+
+### Comments & Variations
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `ctrl+c` | Add Comment | `ADD_COMMENT` |
+| `ctrl+e` | Edit Comment | `EDIT_COMMENT` |
+| `ctrl+shift+v` | Add Variation | `ADD_VARIATION` |
+| `ctrl+shift+up` | Promote Variation | `PROMOTE_VARIATION` |
+| `ctrl+shift+delete` | Delete Variation | `DELETE_VARIATION` |
+| `ctrl+shift+c` | Collapse Variations | `COLLAPSE_VARIATIONS` |
+| `delete` | Delete Move | `DELETE_MOVE` |
+
+<Warning>
+  Deleting a move will remove all subsequent moves in that line. Use variations to preserve alternative lines.
+</Warning>
+
+### Engine Controls
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `mod+shift+e` | Toggle Engine | `TOGGLE_ENGINE` |
+| `escape` | Stop Engine | `STOP_ENGINE` |
+| `mod+a` | Analyze Position | `ANALYZE_POSITION` |
+| `mod+shift+i` | Infinite Analysis | `INFINITE_ANALYSIS` |
+| `e` | Toggle Eval Bar | `TOGGLE_EVAL_BAR` |
+| `shift+e` | Toggle All Engines | `TOGGLE_ALL_ENGINES` |
+
+## Board Control
+
+### Position Setup
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `f` | Swap Orientation | `SWAP_ORIENTATION` |
+| `shift+f` | Flip Board | `FLIP_BOARD` |
+| `mod+0` | Reset Position | `RESET_POSITION` |
+| `mod+shift+s` | Setup Position | `SETUP_POSITION` |
+| `mod+l` | Clear Shapes | `CLEAR_SHAPES` |
+| `mod+b` | Blindfold Mode | `BLINDFOLD` |
+
+<Note>
+  **Swap Orientation** (`f`) rotates the board, while **Flip Board** (`shift+f`) mirrors the position.
+</Note>
+
+## View Tabs
+
+Quickly switch between different panel views:
+
+| Shortcut | View | Key ID |
+|----------|------|--------|
+| `shift+p` | Practice Tab | `PRACTICE_TAB` |
+| `shift+a` | Analysis Tab | `ANALYSIS_TAB` |
+| `shift+b` | Database Tab | `DATABASE_TAB` |
+| `shift+d` | Annotate Tab | `ANNOTATE_TAB` |
+| `shift+i` | Info Tab | `INFO_TAB` |
+
+## Search & Database
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `mod+k` | Spotlight Search | `SPOTLIGHT_SEARCH` |
+| `mod+f` | Find Position | `FIND_POSITION` |
+| `mod+shift+k` | Quick Search | `QUICK_SEARCH` |
+| `ctrl+shift+f` | Filter Games | `FILTER_GAMES` |
+
+## Window Management
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `mod+\\` | Toggle Sidebar | `TOGGLE_SIDEBAR` |
+| `mod+n` | Toggle Notation | `TOGGLE_NOTATION` |
+| `f11` | Toggle Fullscreen | `TOGGLE_FULLSCREEN` |
+| `mod+shift+1` | Focus Board | `FOCUS_BOARD` |
+| `mod+shift+2` | Focus Moves | `FOCUS_MOVES` |
+| `mod+shift+b` | Toggle Blur | `TOGGLE_BLUR` |
+
+## Training & Practice
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `h` | Show Hint | `SHOW_HINT` |
+| `r` | Retry Position | `RETRY_POSITION` |
+| `ctrl+enter` | Mark as Correct | `MARK_AS_CORRECT` |
+| `ctrl+shift+→` | Skip Position | `SKIP_POSITION` |
+
+## Repertoire Management
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `ctrl+shift+r` | Add to Repertoire | `ADD_TO_REPERTOIRE` |
+| `ctrl+shift+d` | Remove from Repertoire | `REMOVE_FROM_REPERTOIRE` |
+
+## Undo/Redo
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `mod+z` | Undo | `UNDO` |
+| `mod+shift+z` | Redo | `REDO` |
+
+## Settings & Help
+
+| Shortcut | Action | Key ID |
+|----------|--------|--------|
+| `mod+,` | Open Settings | `OPEN_SETTINGS` |
+| `mod+/` | Show Keybindings | `SHOW_KEYBINDINGS` |
+| `mod+?` | Toggle Help | `TOGGLE_HELP` |
+
+## Customization
+
+### Accessing Keybindings Settings
+
+To customize keyboard shortcuts:
+
+1. Press `mod+,` to open Settings
+2. Navigate to the Keybindings section
+3. Click on any shortcut to reassign it
+4. Press your desired key combination
+5. Save changes
+
+<CodeGroup>
+```typescript State Management (keybindings.ts:158)
+export const keyMapAtom = atomWithStorage(
+  "keybindings", 
+  keys, 
+  defaultStorage(keys, localStorage)
+);
+```
+</CodeGroup>
+
+### Modifiers Reference
+
+When customizing shortcuts, use these platform-agnostic tokens:
+
+| Token | macOS | Windows/Linux |
+|-------|-------|---------------|
+| `mod` | ⌘ Command | Ctrl |
+| `ctrl` | ⌃ Control | Ctrl |
+| `alt` | ⌥ Option | Alt |
+| `shift` | ⇧ Shift | Shift |
+
+<Tip>
+  The format uses lowercase tokens (e.g., `mod+shift+f`) which are automatically converted to the appropriate display format for your platform.
+</Tip>
+
+### Formatting Function
+
+Shortcuts are formatted using the `formatHotkeyDisplay` function:
+
+<CodeGroup>
+```typescript formatHotkey.ts:57
+export function formatHotkeyDisplay(combo: string): string {
+  return combo
+    .split("+")
+    .map((t) => mapTokenForDisplay(t, isMac))
+    .join("+");
+}
+```
+</CodeGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Learn Gradually" icon="graduation-cap">
+    Start with basic navigation shortcuts (arrow keys) and gradually add more as you become comfortable.
+  </Card>
+  <Card title="Use Mnemonics" icon="brain">
+    Many shortcuts follow logical patterns: `mod+f` for Find, `mod+s` for Save, etc.
+  </Card>
+  <Card title="Practice Mode" icon="dumbbell">
+    Training shortcuts (`h`, `r`) are optimized for single-key access for faster practice sessions.
+  </Card>
+  <Card title="Avoid Conflicts" icon="triangle-exclamation">
+    When customizing, ensure new shortcuts don't conflict with system or browser shortcuts.
+  </Card>
+</CardGroup>
+
+## Workflow Examples
+
+### Quick Analysis Workflow
+
+```text
+1. mod+k         → Search for position
+2. mod+2         → Switch to Analyze mode
+3. mod+shift+e   → Enable engine
+4. →/←           → Navigate moves
+5. ctrl+[1-6]    → Annotate moves
+6. ctrl+c        → Add comments
+```
+
+### Database Research Workflow
+
+```text
+1. mod+shift+b   → Open Databases
+2. mod+f         → Find position
+3. shift+b       → View Database tab
+4. PageUp/Down   → Browse games
+5. mod+e         → Export interesting games
+```
+
+### Training Session Workflow
+
+```text
+1. mod+3         → Switch to Train mode
+2. shift+p       → Open Practice tab
+3. h             → Get hint if stuck
+4. r             → Retry position
+5. ctrl+enter    → Mark correct
+6. ctrl+shift+→  → Skip if too difficult
+```
+
+## Related Resources
+
+<CardGroup cols={3}>
+  <Card title="Game Analysis" icon="chess-board" href="/guide/game-analysis">
+    Learn more about analyzing positions
+  </Card>
+  <Card title="Multi-Engine Analysis" icon="microscope" href="/features/multi-engine-analysis">
+    Deep dive into analysis features
+  </Card>
+  <Card title="Customization" icon="gear" href="/features/customization">
+    Configure keyboard shortcuts and preferences
+  </Card>
+</CardGroup>

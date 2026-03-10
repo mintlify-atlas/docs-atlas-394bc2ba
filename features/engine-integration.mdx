@@ -1,0 +1,262 @@
+---
+title: Engine Integration
+description: Configure and manage UCI chess engines in Obsidian Chess Studio
+---
+
+## Overview
+
+Obsidian Chess Studio supports UCI (Universal Chess Interface) chess engines for position analysis and game evaluation. The engine integration system allows you to configure multiple engines simultaneously and customize their behavior through UCI options.
+
+## Supported Engines
+
+The application supports any UCI-compatible chess engine, including:
+
+- **Stockfish** - World's strongest open-source engine
+- **Komodo Dragon** - Commercial grandmaster-strength engine  
+- **Leela Chess Zero (Lc0)** - Neural network-based engine
+- **Other UCI engines** - Any engine following the UCI protocol
+
+## Engine Configuration
+
+### Adding an Engine
+
+Engines can be added through the package manager or by specifying a custom engine path:
+
+```rust
+// src-tauri/src/chess/engine_path.rs
+pub fn resolve_engine_path(engine: &str, app: &AppHandle) -> PathBuf
+```
+
+The engine path resolver handles:
+- **Built-in engines** - Pre-packaged with the application
+- **Custom engines** - User-installed engine binaries
+- **Platform-specific paths** - Automatic path resolution for Windows, macOS, and Linux
+
+### Engine Process Management
+
+Each engine runs in its own background process managed by the `EngineProcess` struct:
+
+<CodeGroup>
+```rust Engine Initialization
+// Spawn a new UCI engine process
+let (mut process, mut reader) = EngineProcess::new(path).await?;
+
+// Set engine options
+process.set_options(options).await?;
+
+// Start analysis
+process.go(&go_mode).await?;
+```
+
+```rust Engine Options
+pub struct EngineOptions {
+    pub fen: String,
+    pub moves: Vec<String>,
+    pub extra_options: Vec<EngineOption>,
+}
+```
+</CodeGroup>
+
+## UCI Options
+
+### Common UCI Options
+
+Engines expose configurable options through the UCI protocol:
+
+<ParamField path="Hash" type="spin" default="128">
+  Hash table size in MB. Larger values improve engine strength but use more memory.
+</ParamField>
+
+<ParamField path="Threads" type="spin" default="1">
+  Number of CPU threads to use for analysis. Set to match your CPU core count for best performance.
+</ParamField>
+
+<ParamField path="MultiPV" type="spin" default="1">
+  Number of principal variations to show. Set to 2+ to see alternative lines.
+</ParamField>
+
+<ParamField path="Ponder" type="check" default="false">
+  Enable engine to think during opponent's time.
+</ParamField>
+
+### Configuring Options
+
+Engine options are configured via the `EngineOption` struct:
+
+```typescript
+interface EngineOption {
+  name: string;
+  value: string;
+}
+
+// Example: Configure Stockfish with 4 threads and 2GB hash
+const options: EngineOption[] = [
+  { name: "Threads", value: "4" },
+  { name: "Hash", value: "2048" },
+  { name: "MultiPV", value: "3" }
+];
+```
+
+## Analysis Modes
+
+### Go Modes
+
+The engine supports multiple analysis modes:
+
+<ResponseField name="Depth" type="number">
+  Analyze to a specific depth (e.g., depth 20)
+  
+  ```typescript
+  { t: "Depth", c: 20 }
+  ```
+</ResponseField>
+
+<ResponseField name="Time" type="number">
+  Analyze for a fixed time in milliseconds
+  
+  ```typescript
+  { t: "Time", c: 5000 } // 5 seconds
+  ```
+</ResponseField>
+
+<ResponseField name="Nodes" type="number">
+  Analyze until reaching a specific node count
+  
+  ```typescript
+  { t: "Nodes", c: 1000000 }
+  ```
+</ResponseField>
+
+<ResponseField name="Infinite" type="void">
+  Analyze indefinitely until stopped
+  
+  ```typescript
+  { t: "Infinite" }
+  ```
+</ResponseField>
+
+<ResponseField name="PlayersTime" type="object">
+  Analyze with time controls matching a real game
+  
+  ```typescript
+  {
+    t: "PlayersTime",
+    c: {
+      white: 300000,  // 5 minutes
+      black: 300000,
+      winc: 3000,     // 3 second increment
+      binc: 3000
+    }
+  }
+  ```
+</ResponseField>
+
+## Engine Output
+
+### Best Move Response
+
+Engine analysis returns detailed information about the best moves:
+
+```typescript
+interface BestMoves {
+  nodes: number;           // Nodes searched
+  depth: number;           // Search depth reached
+  score: Score;            // Position evaluation
+  uciMoves: string[];      // Moves in UCI notation (e.g., "e2e4")
+  sanMoves: string[];      // Moves in SAN notation (e.g., "e4")
+  multipv: number;         // Line number (1 for main line)
+  nps: number;             // Nodes per second
+}
+
+interface Score {
+  value: { type: "cp", value: number } | { type: "mate", value: number };
+  wdl?: [number, number, number];  // Win/Draw/Loss probability
+}
+```
+
+### Progress Updates
+
+Engine analysis emits progress events at 10 updates per second:
+
+```typescript
+interface BestMovesPayload {
+  best_lines: BestMoves[];
+  engine: string;
+  tab: string;
+  fen: string;
+  moves: string[];
+  progress: number;  // 0-100
+}
+```
+
+## Platform-Specific Considerations
+
+### Linux & macOS
+
+Engine binaries must have execute permissions:
+
+```rust
+// Automatically set by the application
+use std::os::unix::fs::PermissionsExt;
+let mut permissions = metadata.permissions();
+permissions.set_mode(0o755);
+```
+
+### Android
+
+Engine binaries must be:
+- 64-bit ARM (aarch64) ELF executables
+- Either ET_EXEC or ET_DYN format
+- Properly signed for the target device
+
+```rust
+// Validation performed automatically
+pub(crate) fn validate_android_elf(path: &std::path::Path) -> Result<(), Error>
+```
+
+### Windows
+
+Engine processes run with `CREATE_NO_WINDOW` flag to prevent console windows from appearing.
+
+## Troubleshooting
+
+### Engine Not Starting
+
+<AccordionGroup>
+  <Accordion title="Permission Denied Error">
+    **Linux/macOS**: Ensure the engine binary has execute permissions:
+    ```bash
+    chmod +x /path/to/engine
+    ```
+    
+    **Android**: Some devices block execution from certain filesystems (noexec mount). Try moving the engine to internal storage.
+  </Accordion>
+
+  <Accordion title="Engine Binary Not Found">
+    Verify the engine path in settings. The application looks for engines in:
+    - Package manager directory
+    - Custom engine paths specified in settings
+    - Platform-specific application data directories
+  </Accordion>
+
+  <Accordion title="Engine Crashes on Startup">
+    Check engine logs in the application. Common causes:
+    - Wrong architecture (e.g., 32-bit engine on 64-bit system)
+    - Missing dependencies (especially for neural network engines)
+    - Corrupted engine binary
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+1. **Thread Configuration**: Set threads to match your CPU cores (usually 4-8 for modern systems)
+2. **Hash Size**: Allocate 1-2 GB for desktop systems, less for mobile devices  
+3. **MultiPV**: Use 1 for fastest analysis, 2-3 for seeing alternative lines
+4. **Analysis Depth**: Depth 20-25 is sufficient for most positions, 30+ for critical analysis
+5. **Engine Selection**: Use Stockfish for speed, Lc0 for positional understanding
+
+## Related
+
+- [Multi-Engine Analysis](/features/multi-engine-analysis)
+- [Opening Analysis](/features/opening-analysis)
+- [Game Analysis](/guide/game-analysis)

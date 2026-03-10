@@ -1,0 +1,341 @@
+---
+title: Game Analysis
+description: Analyze your chess games with powerful engine evaluation, multiple lines, and detailed position assessment
+---
+
+Obsidian Chess Studio integrates chess engines (like Stockfish) to provide deep analysis of your games and positions.
+
+## Running Engine Analysis
+
+<Steps>
+  <Step title="Open a Game or Position">
+    Load a game from your database, open a PGN file, or set up a position on the analysis board.
+  </Step>
+  
+  <Step title="Enable Engine">
+    Click the **Engine** toggle in the analysis panel to start the chess engine.
+  </Step>
+  
+  <Step title="Configure Analysis Settings">
+    Adjust engine parameters:
+    - **Threads**: Number of CPU cores to use (more = faster analysis)
+    - **Hash**: Memory allocated for the engine (larger = better)
+    - **MultiPV**: Number of best lines to show simultaneously (1-5)
+    - **Depth**: How deep the engine searches (higher = slower but more accurate)
+  </Step>
+  
+  <Step title="Navigate Through Moves">
+    As you move through the game, the engine continuously evaluates each position showing:
+    - Evaluation score (centipawns or mate distance)
+    - Best move(s)
+    - Principal variation (PV) - the expected continuation
+    - Depth reached
+  </Step>
+</Steps>
+
+## Understanding Evaluations
+
+### Evaluation Bar
+
+The evaluation bar on the side of the board shows:
+
+- **White advantage**: Bar favors White (positive scores)
+- **Black advantage**: Bar favors Black (negative scores)
+- **Equal**: Centered position (around 0.00)
+
+### Centipawn Values
+
+<Tabs>
+  <Tab title="Score Ranges">
+    | Score | Interpretation |
+    |-------|----------------|
+    | 0.00 | Equal position |
+    | +0.50 | Slight White advantage |
+    | +1.50 | Clear White advantage |
+    | +3.00 | Winning advantage for White |
+    | +6.00+ | Decisive advantage |
+    | -0.50 | Slight Black advantage |
+    | -1.50 | Clear Black advantage |
+    | -3.00 | Winning advantage for Black |
+    | -6.00+ | Decisive advantage |
+  </Tab>
+  
+  <Tab title="Material Equivalents">
+    Approximate piece values in centipawns:
+    - Pawn: 100cp
+    - Knight/Bishop: ~300cp
+    - Rook: ~500cp
+    - Queen: ~900cp
+    
+    An evaluation of +3.00 means White is ahead by roughly 3 pawns worth of advantage.
+  </Tab>
+</Tabs>
+
+### Mate Scores
+
+When the engine finds a forced checkmate:
+
+- **M5**: Checkmate in 5 moves
+- **M1**: Checkmate in 1 move (immediate mate)
+- **-M3**: Black has checkmate in 3 moves
+
+<Note>
+  The number indicates moves (full moves, not half-moves/plies). "M5" means 5 moves for the side to move.
+</Note>
+
+## Viewing Multiple Lines (MultiPV)
+
+MultiPV shows alternative best moves:
+
+<Steps>
+  <Step title="Enable MultiPV">
+    In engine settings, set **MultiPV** to 2, 3, 4, or 5.
+  </Step>
+  
+  <Step title="View Lines">
+    The analysis panel shows multiple variations ranked by evaluation:
+    
+    ```
+    1. +0.45  Nf3 Nf6 Nc3 d5
+    2. +0.32  e4 e5 Nf3 Nc6
+    3. +0.20  d4 d5 c4 e6
+    ```
+  </Step>
+  
+  <Step title="Add to Game">
+    Click any line to add it as a variation in your game notation.
+  </Step>
+</Steps>
+
+<Note>
+  Higher MultiPV values (4-5) can significantly slow down analysis, especially on weaker hardware.
+</Note>
+
+## Analysis Features
+
+### Evaluation Listener
+
+The evaluation listener automatically:
+- Updates the eval bar as you navigate moves
+- Shows the engine's top move with an arrow on the board
+- Displays the principal variation in the analysis panel
+- Highlights blunders, mistakes, and inaccuracies
+
+### Move Annotations
+
+Analysis can automatically annotate moves:
+
+- **!!** Brilliant move
+- **!** Good move
+- **!?** Interesting move
+- **?!** Dubious move
+- **?** Mistake (evaluation drop of ~1.00)
+- **??** Blunder (evaluation drop of ~2.00+)
+
+<Steps>
+  <Step title="Analyze Full Game">
+    Enable the engine and let it evaluate all positions.
+  </Step>
+  
+  <Step title="View Annotations">
+    Annotations appear in the move list based on evaluation changes.
+  </Step>
+  
+  <Step title="Save Annotated Game">
+    Save the PGN file with annotations included.
+  </Step>
+</Steps>
+
+### Variation Tree
+
+Explore different move options:
+
+1. **Main line**: The actual game played
+2. **Variations**: Alternative moves you or the engine suggest
+3. **Sub-variations**: Variations within variations
+
+**Navigation:**
+- Click any move to jump to that position
+- Right-click to promote a variation to the main line
+- Delete variations you don't need
+
+## Engine Management
+
+### Adding Engines
+
+Obsidian Chess Studio supports any UCI-compatible engine:
+
+<Steps>
+  <Step title="Navigate to Engine Settings">
+    Go to Settings > Engines.
+  </Step>
+  
+  <Step title="Add Engine">
+    Click **Add Engine** and locate the engine executable:
+    - **Windows**: `stockfish.exe` or other `.exe` file
+    - **macOS/Linux**: Stockfish binary or other UCI engine
+  </Step>
+  
+  <Step title="Configure Engine">
+    Set engine-specific options:
+    - Default threads and hash
+    - Engine-specific parameters (if supported)
+  </Step>
+  
+  <Step title="Set as Default">
+    Mark your preferred engine as default for analysis.
+  </Step>
+</Steps>
+
+### Switching Engines
+
+You can switch between engines during analysis:
+- Each engine may have different playing styles
+- Useful for comparing evaluations
+- Some engines specialize in certain positions (tactical vs. positional)
+
+## Deep Analysis Techniques
+
+### Cloud Analysis
+
+For critical positions, you can:
+1. Copy the FEN (position notation)
+2. Paste into Lichess Analysis Board or chess cloud engines
+3. Get multi-engine consensus or deeper analysis
+
+### Analyzing Critical Moments
+
+<Accordion title="Identify Key Positions">
+  Look for:
+  - Large evaluation swings (mistakes/blunders)
+  - Complex tactical positions
+  - Critical endgame positions
+  
+  Let the engine run longer (higher depth) on these positions for more accurate analysis.
+</Accordion>
+
+<Accordion title="Time Control Analysis">
+  Review positions where you were in time trouble:
+  - Did you make mistakes under time pressure?
+  - Were there simpler winning moves?
+  - Could you have simplified earlier?
+</Accordion>
+
+<Accordion title="Opening Preparation">
+  Analyze your opening games:
+  - Find where you deviated from theory
+  - Identify weak moves in your repertoire
+  - Build better preparation lines
+</Accordion>
+
+## Annotation Workflow
+
+### Manual Annotations
+
+Add your own analysis:
+
+<Steps>
+  <Step title="Navigate to Position">
+    Go to any position in the game.
+  </Step>
+  
+  <Step title="Add Comment">
+    Click the annotation icon and type your comment:
+    
+    ```
+    This position is critical. White should play Nd5 to
+    dominate the outpost and restrict Black's pieces.
+    ```
+  </Step>
+  
+  <Step title="Add Glyphs">
+    Assign symbols:
+    - `!`, `!!`, `?`, `??`, `!?`, `?!`
+    - Position assessment: `+=`, `=+`, `+-`, `-+`, `=`
+  </Step>
+  
+  <Step title="Draw Arrows and Shapes">
+    Use the board drawing tools:
+    - Arrows: Show tactical threats or plans
+    - Circles: Highlight key squares
+    - Different colors for different themes
+  </Step>
+</Steps>
+
+### Combining Engine and Manual Analysis
+
+Best practice:
+
+1. Run engine analysis first
+2. Review engine lines and understand why moves are good/bad
+3. Add your own explanations in comments
+4. Draw arrows for key tactical ideas
+5. Create variations for instructive alternatives
+6. Save the fully annotated game
+
+## Performance Optimization
+
+<CardGroup cols={2}>
+  <Card title="Adjust Threads" icon="cpu">
+    Use fewer threads on older computers to avoid lag. Modern CPUs with 8+ cores can use 4-6 threads.
+  </Card>
+  
+  <Card title="Limit Depth" icon="layer-group">
+    For casual analysis, depth 18-22 is sufficient. Deeper analysis (25+) is slower but more accurate.
+  </Card>
+  
+  <Card title="Reduce MultiPV" icon="list">
+    MultiPV 1-2 is faster. Use higher values only when exploring multiple options.
+  </Card>
+  
+  <Card title="Increase Hash" icon="database">
+    More hash memory (512MB-2GB) improves analysis speed and accuracy on powerful machines.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Engine Not Starting
+
+1. Verify the engine path is correct in Settings
+2. Ensure the engine file has execute permissions (macOS/Linux)
+3. Check engine logs for error messages
+4. Try a different UCI engine
+
+### Slow Analysis
+
+- Reduce threads if CPU is maxed out
+- Lower MultiPV to 1 or 2
+- Close other applications using CPU/memory
+- Consider upgrading to a faster engine (newer Stockfish versions)
+
+### Inconsistent Evaluations
+
+- Different engines may evaluate differently
+- Increase depth for more stable evaluations
+- Some positions are genuinely unclear to engines
+- Compare with cloud engines for complex positions
+
+## Best Practices
+
+<Steps>
+  <Step title="Start with Engine Overview">
+    Run the engine through the entire game quickly to identify critical moments.
+  </Step>
+  
+  <Step title="Deep Dive on Key Positions">
+    Spend more time analyzing positions where the evaluation changed significantly.
+  </Step>
+  
+  <Step title="Understand, Don't Memorize">
+    Don't just copy engine moves. Understand the plans and ideas behind them.
+  </Step>
+  
+  <Step title="Compare Your Thinking">
+    Before checking the engine, analyze the position yourself. Then see how your analysis compares.
+  </Step>
+  
+  <Step title="Save and Review">
+    Save annotated games and review them later to reinforce learning.
+  </Step>
+</Steps>

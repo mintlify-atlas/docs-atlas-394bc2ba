@@ -1,0 +1,595 @@
+---
+title: Tablebase Integration
+description: Complete guide to Syzygy tablebase integration in Obsidian Chess Studio
+icon: chess
+---
+
+Obsidian Chess Studio integrates with Lichess's Syzygy tablebase API to provide perfect endgame analysis for positions with 7 pieces or fewer.
+
+## What are Tablebases?
+
+Tablebases are databases containing perfect play information for all possible positions with a limited number of pieces. They answer two key questions:
+
+1. **What is the objective outcome?** (Win, draw, or loss)
+2. **What is the optimal move?** (Best move with fewest moves to conversion or mate)
+
+<Note>
+  Tablebases provide **perfect** information - not engine evaluation, but mathematically proven best play assuming both sides play optimally.
+</Note>
+
+## Syzygy Tablebases
+
+Obsidian Chess Studio uses the Syzygy tablebase format, hosted by Lichess:
+
+<CardGroup cols={3}>
+  <Card title="7-Man Tablebases" icon="trophy">
+    Complete 7-piece endgame database
+    
+    Covers all positions up to 7 pieces
+  </Card>
+  <Card title="Online Access" icon="cloud">
+    No download required
+    
+    Instant access via Lichess API
+  </Card>
+  <Card title="Free & Fast" icon="bolt">
+    Free for all users
+    
+    Sub-second response times
+  </Card>
+</CardGroup>
+
+## API Integration
+
+### Lichess Tablebase Endpoint
+
+<CodeGroup>
+```typescript API Configuration (lichess/api.tsx:26)
+const tablebaseURL = "https://tablebase.lichess.ovh";
+```
+</CodeGroup>
+
+### Fetching Tablebase Data
+
+<CodeGroup>
+```typescript Tablebase Request (lichess/api.tsx:497)
+export async function getTablebaseInfo(fen: string): Promise<TablebaseData> {
+  const res = await fetch(`${tablebaseURL}/standard?fen=${fen}`);
+  if (!res.ok) {
+    throw new Error(`Failed to load tablebase info for ${fen} - ${res.status}`);
+  }
+  return res.json();
+}
+```
+</CodeGroup>
+
+### Response Structure
+
+<CodeGroup>
+```typescript Type Definition (lichess/api.tsx:40)
+type TablebaseData = {
+  checkmate: boolean;
+  stalemate: boolean;
+  variant_win: boolean;
+  variant_loss: boolean;
+  insufficient_material: boolean;
+  dtz: number;          // Distance to zeroing (capture/pawn move)
+  precise_dtz: number;  // Precise DTZ for optimal play
+  dtm: number;          // Distance to mate (when available)
+  category: TablebaseCategory;
+  moves: TablebaseMove[];
+};
+```
+</CodeGroup>
+
+## Position Categories
+
+Tablebase positions are classified into these categories:
+
+<AccordionGroup>
+  <Accordion title="Win / Loss">
+    **Win**: Current side to move can force a win with optimal play.
+    
+    **Loss**: Current side to move will lose with optimal defense.
+
+    <CodeGroup>
+    ```typescript Category Matching (TablebaseInfo.tsx:118)
+    const normalizedCategory = match(category)
+      .with("win", () => 
+        turn === "white" 
+          ? t("chess.outcome.whiteWins") 
+          : t("chess.outcome.blackWins")
+      )
+      .with("loss", () => 
+        turn === "white" 
+          ? t("chess.outcome.blackWins") 
+          : t("chess.outcome.whiteWins")
+      )
+    ```
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Draw">
+    **Draw**: Position is a theoretical draw with perfect play.
+
+    Includes:
+    - Insufficient material
+    - Stalemate
+    - Positions where neither side can make progress
+  </Accordion>
+
+  <Accordion title="Cursed-Win / Blessed-Loss">
+    **Cursed-Win**: Technically winning, but will be drawn by the 50-move rule.
+    
+    **Blessed-Loss**: Technically losing, but can force a draw via the 50-move rule.
+
+    <Note>
+      These occur in long endgames where optimal play exceeds 50 moves without a capture or pawn move.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Maybe-Win / Maybe-Loss">
+    **Maybe-Win**: Winning position where optimal play depends on 50-move rule enforcement.
+    
+    **Maybe-Loss**: Losing position where optimal defense relies on 50-move rule.
+
+    <Warning>
+      In practice, these positions often require exceptional technique. The 50-move rule adds uncertainty.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="Unknown">
+    **Unknown**: Position not in tablebase (> 7 pieces) or couldn't be determined.
+
+    Falls back to engine evaluation for these positions.
+  </Accordion>
+</AccordionGroup>
+
+## Distance Metrics
+
+### DTZ (Distance to Zeroing)
+
+**Definition**: Number of moves until a capture or pawn move (zeroing move) with optimal play.
+
+<Note>
+  DTZ is the primary metric for Syzygy tablebases because it respects the 50-move rule.
+</Note>
+
+**Example**:
+- `DTZ = 15`: Optimal play reaches a capture/pawn move in 15 moves
+- `DTZ = 0`: Current position requires an immediate capture/pawn move
+
+### DTM (Distance to Mate)
+
+**Definition**: Number of moves until checkmate with optimal play.
+
+<Warning>
+  DTM is not always available. When present, it provides the exact mate sequence length.
+</Warning>
+
+**Key Difference**: DTM ignores the 50-move rule, while DTZ respects it.
+
+### Display Logic
+
+<CodeGroup>
+```typescript Badge Label (TablebaseInfo.tsx:129)
+const label = wins
+  ? normalizedCategory
+  : match(category)
+      .with("draw", () => t("chess.outcome.draw"))
+      .with("unknown", () => t("features.tablebase.unknown"))
+      .otherwise(() =>
+        dtm 
+          ? t("features.tablebase.dtm", { count: Math.abs(dtm) }) 
+          : t("features.tablebase.dtz", { count: dtz }),
+      );
+```
+</CodeGroup>
+
+**Display Priority**:
+1. Show DTM if available (exact mate length)
+2. Otherwise show DTZ (50-move rule compliant)
+3. For draws, show outcome only
+
+## User Interface
+
+### Tablebase Panel
+
+The tablebase information appears in the Analysis panel:
+
+<CodeGroup>
+```typescript Component (TablebaseInfo.tsx:48)
+<Accordion.Item value="tablebase">
+  <Accordion.Control>
+    <Group>
+      <Text fw="bold">{t("features.tablebase.title")}</Text>
+      {isLoading && (
+        <Badge variant="transparent">{t("common.loading")}</Badge>
+      )}
+      {error && (
+        <Text ta="center">
+          {t("features.tablebase.error")}
+          {error.message}
+        </Text>
+      )}
+      {data && <OutcomeBadge category={data.category} turn={turn} wins />}
+    </Group>
+  </Accordion.Control>
+  <Accordion.Panel>
+    {/* Move list */}
+  </Accordion.Panel>
+</Accordion.Item>
+```
+</CodeGroup>
+
+### Move Display
+
+Moves are displayed in a grid with outcome badges:
+
+<CodeGroup>
+```typescript Move Grid (TablebaseInfo.tsx:69)
+<SimpleGrid cols={3}>
+  {sortedMoves?.map((m) => (
+    <Paper
+      withBorder
+      key={m.san}
+      px="xs"
+      onClick={() => {
+        makeMove({ payload: parseUci(m.uci)! });
+      }}
+      className={classes.info}
+    >
+      <Group gap="xs" justify="space-between" wrap="nowrap">
+        <Text fz="0.9rem" fw={600} ta="center">
+          {m.san}
+        </Text>
+        <OutcomeBadge
+          category={m.category}
+          dtz={Math.abs(m.dtz)}
+          dtm={m.dtm}
+          turn={turn === "white" ? "black" : "white"}
+        />
+      </Group>
+    </Paper>
+  ))}
+</SimpleGrid>
+```
+</CodeGroup>
+
+### Move Sorting
+
+Moves are sorted by outcome quality:
+
+<CodeGroup>
+```typescript Sort Logic (TablebaseInfo.tsx:23)
+const sortedMoves = data?.moves.sort((a, b) => {
+  // Winning moves first
+  if (a.category === "win" && b.category !== "win") {
+    return 1;
+  }
+  if (a.category !== "win" && b.category === "win") {
+    return -1;
+  }
+  // Losing moves last
+  if (a.category === "loss" && b.category !== "loss") {
+    return -1;
+  }
+  if (a.category !== "loss" && b.category === "loss") {
+    return 1;
+  }
+  return 0;
+});
+```
+</CodeGroup>
+
+**Sorting Priority**:
+1. Winning moves (sorted by shortest DTZ)
+2. Drawing moves
+3. Losing moves (sorted by longest DTZ)
+
+## Caching Strategy
+
+### React Query Integration
+
+<CodeGroup>
+```typescript Query Configuration (TablebaseInfo.tsx:16)
+const { data, error, isLoading } = useQuery({
+  queryKey: ["tablebase", fen],
+  queryFn: async () => await getTablebaseInfo(fen),
+  staleTime: Infinity,  // Tablebase data never changes
+  enabled: !!fen,
+});
+```
+</CodeGroup>
+
+**Benefits**:
+- **Infinite Stale Time**: Tablebase data is immutable, so cached forever
+- **FEN-Based Keys**: Each position cached separately
+- **Automatic Deduplication**: Multiple requests for same FEN share one fetch
+- **Persistent Cache**: Survives tab switches and navigation
+
+### Cache Invalidation
+
+<Note>
+  Tablebase cache is never invalidated because endgame theory doesn't change. Only cleared on application restart or manual cache clearing.
+</Note>
+
+## Usage in Analysis
+
+### When Tablebases Activate
+
+Tablebases automatically activate when:
+
+1. **Position has ≤ 7 pieces** (including kings)
+2. **Analysis panel is open**
+3. **Position is legal**
+4. **Network connection available**
+
+<Tip>
+  No configuration needed - tablebases work automatically for eligible positions!
+</Tip>
+
+### Interpreting Results
+
+<Steps>
+  <Step title="Check Category">
+    Look at the badge color in the accordion header:
+    - **White/Black**: Winning for that side
+    - **Gray**: Draw
+    - **Yellow**: Cursed/Blessed/Maybe (50-move rule affects outcome)
+  </Step>
+  <Step title="Review Moves">
+    All legal moves are listed with their outcomes. Click any move to play it.
+  </Step>
+  <Step title="Distance Metrics">
+    Note the DTZ/DTM values:
+    - Low numbers = Quick conversion
+    - High numbers = Long endgame
+    - **50+ moves** = Risk of 50-move rule draw
+  </Step>
+  <Step title="Verify with Engine">
+    For complex endgames, compare tablebase suggestions with engine evaluation.
+  </Step>
+</Steps>
+
+### Practical Examples
+
+<AccordionGroup>
+  <Accordion title="Example 1: King and Pawn Endgame">
+    **Position**: `8/8/8/4k3/8/4K3/4P3/8 w - - 0 1`
+
+    **Tablebase Result**:
+    - Category: `win` (White)
+    - DTZ: 16
+    - Best Move: `Kd4` (DTZ 15)
+
+    **Interpretation**: White wins in 16 moves with optimal play. Moving the king toward the pawn is correct.
+  </Accordion>
+
+  <Accordion title="Example 2: Rook vs Rook and Pawn">
+    **Position**: `8/8/8/r7/8/8/1R6/4K2k w - - 0 1`
+
+    **Tablebase Result**:
+    - Category: `draw`
+    - Best Move: Any (all draw)
+
+    **Interpretation**: Despite material disadvantage, White achieves a fortress draw.
+  </Accordion>
+
+  <Accordion title="Example 3: Cursed-Win">
+    **Position**: Complex 7-piece position
+
+    **Tablebase Result**:
+    - Category: `cursed-win`
+    - DTZ: 53
+
+    **Interpretation**: Technically winning, but exceeds 50-move rule. In practice, will be drawn.
+  </Accordion>
+</AccordionGroup>
+
+## Advanced Features
+
+### Fifty-Move Rule Indicator
+
+<CodeGroup>
+```typescript Fifty-Move Rule Warning (TablebaseInfo.tsx:143)
+{["blessed-loss", "cursed-win", "maybe-win", "maybe-loss"].includes(category) && wins && (
+  <Text c="dimmed" fz="xs">
+    {t("features.tablebase.fiftyMoveRule")}
+  </Text>
+)}
+```
+</CodeGroup>
+
+Positions affected by the 50-move rule show a warning indicator.
+
+### Color Coding
+
+<CodeGroup>
+```typescript Outcome Colors (TablebaseInfo.tsx:124)
+const color = match(category)
+  .with("win", () => (turn === "white" ? "white" : "black"))
+  .with("loss", () => (turn === "white" ? "black" : "white"))
+  .otherwise(() => "gray");
+```
+</CodeGroup>
+
+**Color Scheme**:
+- **White Badge**: White is winning
+- **Black Badge**: Black is winning  
+- **Gray Badge**: Draw or unknown
+
+### Interactive Move Selection
+
+Click any move in the tablebase panel to play it on the board:
+
+<CodeGroup>
+```typescript Move Selection (TablebaseInfo.tsx:76)
+onClick={() => {
+  makeMove({ payload: parseUci(m.uci)! });
+}}
+```
+</CodeGroup>
+
+## Limitations
+
+<Warning>
+  Be aware of these tablebase limitations:
+</Warning>
+
+1. **7-Piece Maximum**: Positions with 8+ pieces not supported
+2. **Network Required**: Online API requires internet connection
+3. **Standard Chess Only**: No support for variants (Chess960, etc.)
+4. **50-Move Rule Complexity**: Cursed/blessed positions may be impractical
+5. **No Positional Understanding**: Tablebases only provide "perfect" moves, not instructive plans
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Tablebase Not Loading">
+    **Symptoms**: Accordion shows "Loading" indefinitely or error message.
+
+    **Solutions**:
+    1. Check internet connection
+    2. Verify position has ≤ 7 pieces
+    3. Ensure position is legal
+    4. Check Lichess API status at status.lichess.org
+    5. Clear browser/app cache
+    6. Retry after a few seconds (API rate limiting)
+  </Accordion>
+
+  <Accordion title="Unexpected Results">
+    **Symptoms**: Tablebase shows surprising outcomes.
+
+    **Explanation**: Tablebase results are mathematically perfect but may seem counterintuitive:
+    - Sacrifices that lead to winning pawn endgames
+    - Long king marches that are optimal
+    - Positions that "look" drawn but have forced wins
+
+    **Solution**: Trust the tablebase - it's proven perfect play!
+  </Accordion>
+
+  <Accordion title="Performance Issues">
+    **Symptoms**: Slow API responses.
+
+    **Solutions**:
+    <CodeGroup>
+    ```typescript Error Handling (lichess/api.tsx:497)
+    if (!res.ok) {
+      throw new Error(
+        `Failed to load tablebase info for ${fen} - ${res.status}`
+      );
+    }
+    ```
+    </CodeGroup>
+
+    1. Check network speed
+    2. Use wired connection if possible
+    3. Wait for Lichess server load to decrease
+    4. Results are cached - revisit position later for instant load
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Verify Critical Positions" icon="check">
+    For important games, verify tablebase moves with engine analysis to understand the plan.
+  </Card>
+  <Card title="Learn Endgame Patterns" icon="graduation-cap">
+    Use tablebases as a learning tool - study why certain moves are optimal.
+  </Card>
+  <Card title="Respect the 50-Move Rule" icon="clock">
+    Pay attention to cursed/blessed positions - they may be impractical in real games.
+  </Card>
+  <Card title="Combine with Engine" icon="brain">
+    Use both tablebase and engine for comprehensive endgame understanding.
+  </Card>
+</CardGroup>
+
+## Integration with Other Features
+
+### Engine Analysis
+
+Tablebase results complement engine analysis:
+
+- **Positions with ≤ 7 pieces**: Tablebase provides perfect play
+- **Positions with 8+ pieces**: Engine provides evaluation
+- **Transition Zones**: Watch how engine moves aim for tablebase wins
+
+### Database Searches
+
+Use tablebases to find critical endgame positions in your database:
+
+1. Search for positions with few pieces
+2. Check tablebase outcomes
+3. Study games where players reached these positions
+4. Learn typical paths to winning/drawing endgames
+
+### Training
+
+Incorporate tablebase positions into training:
+
+1. Set up 7-piece positions
+2. Try to find the best move
+3. Check against tablebase
+4. Repeat until mastered
+
+<Tip>
+  Focus on common endgames like KQvKR, KRvKP, and basic pawn endgames for practical improvement.
+</Tip>
+
+## Technical Details
+
+### API Request Format
+
+<CodeGroup>
+```http
+GET https://tablebase.lichess.ovh/standard?fen={fen}
+```
+</CodeGroup>
+
+**Parameters**:
+- `fen`: URL-encoded FEN string of the position
+
+**Response**: JSON object with position analysis (see Response Structure above)
+
+### Error Handling
+
+<CodeGroup>
+```typescript Error Handling (lichess/api.tsx:499)
+if (!res.ok) {
+  throw new Error(`Failed to load tablebase info for ${fen} - ${res.status}`);
+}
+return res.json();
+```
+</CodeGroup>
+
+**Common HTTP Status Codes**:
+- `200 OK`: Success
+- `400 Bad Request`: Invalid FEN or > 7 pieces
+- `429 Too Many Requests`: Rate limited
+- `500 Internal Server Error`: Lichess server issue
+
+## Related Resources
+
+<CardGroup cols={3}>
+  <Card title="Game Analysis" icon="microscope" href="/guide/game-analysis">
+    Learn about other analysis features
+  </Card>
+  <Card title="Engine Integration" icon="gear" href="/features/engine-integration">
+    Configure chess engines
+  </Card>
+  <Card title="Puzzle Training" icon="chess-board" href="/guide/puzzles">
+    Practice tactical and endgame positions
+  </Card>
+</CardGroup>
+
+## Further Reading
+
+<Note>
+  For more information about Syzygy tablebases:
+  - [Lichess Tablebase API Documentation](https://github.com/lichess-org/lila-tablebase)
+  - [Syzygy Tablebase Format](https://syzygy-tables.info/)
+  - [Endgame Tablebase Theory](https://en.wikipedia.org/wiki/Endgame_tablebase)
+</Note>

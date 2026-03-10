@@ -1,0 +1,614 @@
+---
+title: Database Optimization
+description: Advanced techniques for optimizing database performance in Obsidian Chess Studio
+icon: database
+---
+
+Obsidian Chess Studio uses SQLite databases (`.db3` files) to store millions of chess games efficiently. This guide covers optimization techniques for maximum performance.
+
+## Database Architecture
+
+### Storage Format
+
+Obsidian Chess Studio uses a custom SQLite schema optimized for chess data:
+
+<CodeGroup>
+```typescript Database Query (db.ts:125)
+export async function query_games(
+  db: string, 
+  query: GameQuery
+): Promise<QueryResponse<NormalizedGame[]>> {
+  try {
+    const timeControlCategory =
+      (query as unknown as { time_control_category?: string | null })
+        .time_control_category ?? null;
+    return unwrap(
+      await commands.getGames(db, {
+        player1: query.player1,
+        range1: normalizeRange(query.range1),
+        player2: query.player2,
+        range2: normalizeRange(query.range2),
+        tournament_id: query.tournament_id,
+        sides: query.sides,
+        outcome: query.outcome,
+        start_date: query.start_date,
+        end_date: query.end_date,
+        position: null,
+        time_control_category: timeControlCategory,
+        game_details_limit: query.game_details_limit,
+        wanted_result: query.wanted_result ?? null,
+        options: {
+          skipCount: query.options?.skipCount ?? false,
+          page: query.options?.page,
+          pageSize: query.options?.pageSize,
+          sort: query.options?.sort || "id",
+          direction: query.options?.direction || "desc",
+        },
+      } as any),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.toLowerCase().includes("no such table")) {
+      return { data: [], count: 0 };
+    }
+    throw error;
+  }
+}
+```
+</CodeGroup>
+
+### Available Databases
+
+Obsidian Chess Studio provides several pre-optimized databases:
+
+<CardGroup cols={2}>
+  <Card title="Lumbra's Gigabase" icon="trophy">
+    **9.5M+ games** • 526K players • 2.6 GB
+    
+    Comprehensive collection of high-quality games.
+  </Card>
+  <Card title="Caissabase 2024" icon="book">
+    **5.4M+ games** • 321K players • 1.2 GB
+    
+    Curated database of notable games.
+  </Card>
+  <Card title="Position Cache" icon="bolt">
+    **Pre-calculated statistics** • 628 MB
+    
+    Accelerates position searches across major databases.
+  </Card>
+  <Card title="MillionBase" icon="chess-knight">
+    **3.4M+ games** • 284K players • 744 MB
+    
+    Compact yet comprehensive database.
+  </Card>
+</CardGroup>
+
+## Indexing Strategies
+
+### Automatic Indexing
+
+<Note>
+  Obsidian Chess Studio automatically creates indexes when importing databases. For optimal performance, ensure databases are fully indexed before querying.
+</Note>
+
+### Index Types
+
+The backend creates indexes on key fields:
+
+1. **Player Indexes**: Fast player name lookups
+2. **Date Indexes**: Efficient date range queries
+3. **ELO Indexes**: Quick rating-based filtering
+4. **Position Indexes**: Accelerated position searches
+5. **Tournament Indexes**: Fast tournament game retrieval
+
+<CodeGroup>
+```typescript Player Query with Indexing (db.ts:167)
+export async function query_players(
+  db: string, 
+  query: PlayerQuery
+): Promise<QueryResponse<Player[]>> {
+  try {
+    return unwrap(
+      await commands.getPlayers(db, {
+        options: {
+          skipCount: query.options.skipCount || false,
+          page: query.options.page,
+          pageSize: query.options.pageSize,
+          sort: query.options.sort,
+          direction: query.options.direction,
+        },
+        name: query.name,
+        range: normalizeRange(query.range),
+      }),
+    );
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.toLowerCase().includes("no such table")) {
+      return { data: [], count: 0 };
+    }
+    throw error;
+  }
+}
+```
+</CodeGroup>
+
+### Checking Index Status
+
+<CodeGroup>
+```typescript Database Info (db.ts:218)
+async function getDatabase(name: string): Promise<DatabaseInfo> {
+  const appDataDirPath = await appDataDir();
+  const path = await resolve(appDataDirPath, "db", name);
+  const res = await commands.getDbInfo(path);
+  const source = await invoke<DatabaseSource | null>(
+    "get_db_source", 
+    { file: path }
+  ).catch(() => null);
+  
+  if (res.status === "ok") {
+    return {
+      type: "success",
+      ...res.data,
+      file: path,
+      ...(source ? { source } : {}),
+    };
+  }
+  return {
+    type: "error",
+    filename: path,
+    file: path,
+    error: res.error,
+    indexed: false,  // Not indexed if error
+    ...(source ? { source } : {}),
+  };
+}
+```
+</CodeGroup>
+
+## Query Optimization
+
+### Efficient Filtering
+
+<AccordionGroup>
+  <Accordion title="Range Normalization">
+    Avoid unnecessary filters by normalizing ELO ranges:
+
+    <CodeGroup>
+    ```typescript db.ts:118
+    function normalizeRange(
+      range?: [number, number] | null
+    ): [number, number] | undefined {
+      // If range covers full spectrum (3000 points), omit filter
+      if (!range || range[1] - range[0] === 3000) {
+        return undefined;
+      }
+      return range;
+    }
+    ```
+    </CodeGroup>
+
+    **Impact**: Reduces query complexity by removing redundant filters.
+  </Accordion>
+
+  <Accordion title="Skip Count Optimization">
+    For pagination, skip total count calculation when not needed:
+
+    <CodeGroup>
+    ```typescript Query Options
+    {
+      options: {
+        skipCount: true,      // Skip expensive COUNT(*) query
+        page: 1,
+        pageSize: 50,
+        sort: "averageElo",
+        direction: "desc",
+      }
+    }
+    ```
+    </CodeGroup>
+
+    **Performance Gain**: 2-3x faster for large result sets.
+  </Accordion>
+
+  <Accordion title="Limit Game Details">
+    Restrict the number of full game records retrieved:
+
+    <CodeGroup>
+    ```typescript db.ts:146
+    game_details_limit: 
+      query.game_details_limit == null 
+        ? null 
+        : (String(query.game_details_limit) as unknown as bigint),
+    ```
+    </CodeGroup>
+
+    **Best Practice**: Set to 100-1000 for position searches to balance detail and performance.
+  </Accordion>
+
+  <Accordion title="Optimal Sort Fields">
+    Choose appropriate sort fields based on use case:
+
+    | Sort Field | Best For | Performance |
+    |------------|----------|-------------|
+    | `id` | Sequential browsing | ⚡️ Fastest |
+    | `date` | Chronological order | ⚡️ Fast |
+    | `averageElo` | Quality games | 🔶 Moderate |
+    | `ply_count` | Game length | 🔶 Moderate |
+    | `whiteElo`, `blackElo` | Player strength | 🔶 Moderate |
+  </Accordion>
+</AccordionGroup>
+
+### Position Search Optimization
+
+<Warning>
+  Position searches are the most intensive database operation. Use optimization techniques to improve response times.
+</Warning>
+
+<CodeGroup>
+```typescript Position Search (db.ts:654)
+const payload = {
+  position: {
+    fen,
+    type_: type,  // "exact" or "partial"
+  },
+  game_details_limit: String(gameDetailsLimitValue) as unknown as bigint,
+  options: {
+    skipCount: true,
+    sort: (options.sort || "averageElo"),
+    direction: (options.direction || "desc"),
+  },
+  ...(options.start_date ? { start_date: options.start_date } : {}),
+  ...(options.end_date ? { end_date: options.end_date } : {}),
+  ...(wantedResult ? { wanted_result: wantedResult } : {}),
+};
+```
+</CodeGroup>
+
+**Optimization Tips**:
+
+1. **Use Exact Matching** when possible (faster than partial/material matching)
+2. **Apply Date Filters** to narrow search scope
+3. **Limit Game Details** to 500-1000 games
+4. **Use Position Cache** database for frequently searched positions
+
+## Cache Management
+
+### Position Cache Database
+
+The Position Cache database stores pre-calculated statistics:
+
+<Steps>
+  <Step title="Download Position Cache">
+    Download the 628 MB Position Cache from the Databases page.
+  </Step>
+  <Step title="Automatic Integration">
+    The cache is automatically used for position searches across supported databases.
+  </Step>
+  <Step title="Performance Boost">
+    Common positions load 10-50x faster with the position cache.
+  </Step>
+</Steps>
+
+<Note>
+  The Position Cache covers:
+  - Lumbra's Gigabase
+  - Caissabase 2024
+  - Ajedrez Data (Correspondence & OTB)
+  - MillionBase
+</Note>
+
+### In-Memory Caching
+
+Obsidian Chess Studio implements intelligent caching at multiple levels:
+
+<AccordionGroup>
+  <Accordion title="Query Result Cache">
+    Recent query results are cached in memory using `@tanstack/react-query`:
+
+    <CodeGroup>
+    ```typescript React Query
+    const { data, error, isLoading } = useQuery({
+      queryKey: ["default-dbs"],
+      queryFn: async () => {
+        return DATABASES as SuccessDatabaseInfo[];
+      },
+      staleTime: Infinity,  // Cache indefinitely
+    });
+    ```
+    </CodeGroup>
+  </Accordion>
+
+  <Accordion title="Opening Cache">
+    Opening statistics are cached for the current session to avoid redundant calculations.
+  </Accordion>
+
+  <Accordion title="Database Info Cache">
+    Database metadata (game count, player count, etc.) is cached to reduce file system access.
+  </Accordion>
+</AccordionGroup>
+
+### Clearing Cache
+
+To clear cached data:
+
+1. **In-App**: Settings → Advanced → Clear Cache
+2. **Manual**: Delete `AppData/cache` directory
+3. **Selective**: Use React Query Devtools to clear specific queries
+
+## Performance Tuning
+
+### Database File Optimization
+
+<AccordionGroup>
+  <Accordion title="VACUUM Command">
+    Periodically vacuum databases to reclaim space and improve performance:
+
+    <Warning>
+      This operation temporarily requires up to 2x the database size in free disk space.
+    </Warning>
+
+    Benefits:
+    - Removes fragmentation
+    - Reclaims deleted space
+    - Optimizes index structures
+    - Improves query speed by 10-30%
+  </Accordion>
+
+  <Accordion title="File Location">
+    Store databases on fast storage:
+
+    | Storage Type | Random Read | Impact |
+    |--------------|-------------|--------|
+    | NVMe SSD | < 0.1 ms | ⚡️ Best |
+    | SATA SSD | < 0.5 ms | ⚡️ Excellent |
+    | HDD | 10-15 ms | 🔶 Acceptable |
+    | Network | Varies | ❌ Not recommended |
+  </Accordion>
+
+  <Accordion title="Database Size Management">
+    Manage database growth:
+
+    <Steps>
+      <Step title="Archive Old Games">
+        Export and remove games older than a certain date if not needed.
+      </Step>
+      <Step title="Split by Category">
+        Create separate databases for different time controls or player levels.
+      </Step>
+      <Step title="Remove Duplicates">
+        Use built-in duplicate detection before importing.
+      </Step>
+    </Steps>
+  </Accordion>
+</AccordionGroup>
+
+### Query Performance Monitoring
+
+<Tip>
+  Enable performance monitoring in Settings → Developer → Show Query Performance.
+</Tip>
+
+Key metrics to monitor:
+
+- **Query Time**: Target < 500ms for most queries
+- **Result Set Size**: Larger = slower; use pagination
+- **Cache Hit Rate**: Higher = better performance
+- **Database Size**: Impacts memory usage
+
+### Concurrent Query Management
+
+<CodeGroup>
+```typescript Parallel Queries (db.ts:542)
+// If multiple players are selected, issue one query per player
+if (selectedPlayers.length > 0) {
+  const searchLimit = 1000; // backend maximum per search
+  const basePayload = {
+    position: { fen, type_: type },
+    game_details_limit: String(searchLimit) as unknown as bigint,
+    options: {
+      skipCount: true,
+      sort: options.sort || "averageElo",
+      direction: options.direction || "desc",
+    },
+  };
+
+  const results = await Promise.all(
+    payloads.map((p) => 
+      commands.searchPosition(options.path!, p as any, tab)
+    )
+  );
+  // Merge results...
+}
+```
+</CodeGroup>
+
+<Warning>
+  Limit concurrent queries to 3-5 to avoid overwhelming the database engine.
+</Warning>
+
+## Advanced Techniques
+
+### Opening Precaching
+
+Pre-calculate opening statistics for faster analysis:
+
+<Steps>
+  <Step title="Select Reference Database">
+    Go to Settings → Directories → Reference Database.
+  </Step>
+  <Step title="Start Precaching">
+    Click "Start Precache" to begin calculating opening statistics.
+  </Step>
+  <Step title="Monitor Progress">
+    The progress bar shows processed positions and any errors.
+  </Step>
+  <Step title="Completion">
+    Once complete, opening lookups will be significantly faster.
+  </Step>
+</Steps>
+
+<CodeGroup>
+```typescript Precaching (SettingsPage.tsx:156)
+const result = await commands.precacheOpenings(referenceDatabase);
+```
+</CodeGroup>
+
+**Benefits**:
+- 5-10x faster opening explorer
+- Reduced database load
+- Smoother user experience
+
+### Batch Operations
+
+When performing bulk operations:
+
+<CardGroup cols={2}>
+  <Card title="Transaction Batching" icon="layer-group">
+    Group multiple writes into single transactions for 10-100x speedup.
+  </Card>
+  <Card title="Async Processing" icon="spinner">
+    Use background workers for large imports to keep UI responsive.
+  </Card>
+  <Card title="Incremental Updates" icon="arrows-rotate">
+    Update only changed records rather than full re-imports.
+  </Card>
+  <Card title="Deferred Indexing" icon="clock">
+    Create indexes after bulk inserts, not during.
+  </Card>
+</CardGroup>
+
+### ChessBase Online Integration
+
+For cloud-based searches:
+
+<CodeGroup>
+```typescript ChessBase Search (db.ts:478)
+if (isChessbaseDatabasePath(options.path)) {
+  const requestGeneration = ++chessbaseSearchGeneration;
+  
+  const res = await invokeWithAbort<ChessbasePositionSearchResult>(
+    "chessbase_search_position",
+    {
+      fen,
+      useMaterial: type === "partial",
+      maxGames: gameDetailsLimitValue,
+      color: options.color ?? "any",
+      wantedResult: options.result ?? "any",
+      startDate: options.start_date ?? null,
+      endDate: options.end_date ?? null,
+    },
+    signal,
+  );
+}
+```
+</CodeGroup>
+
+<Note>
+  ChessBase searches have a 30-second timeout and support cancellation for better performance.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Slow Query Performance">
+    **Symptoms**: Queries taking > 5 seconds
+
+    **Solutions**:
+    1. Check if database is fully indexed
+    2. Verify database file is on fast storage (SSD)
+    3. Reduce `game_details_limit` to 500-1000
+    4. Enable `skipCount: true` for pagination
+    5. Use Position Cache database
+    6. Run VACUUM to defragment
+  </Accordion>
+
+  <Accordion title="High Memory Usage">
+    **Symptoms**: Application using excessive RAM
+
+    **Solutions**:
+    1. Reduce concurrent query limit
+    2. Clear query cache: Settings → Clear Cache
+    3. Lower `pageSize` in query options
+    4. Restart application to clear memory
+    5. Close unused board tabs
+  </Accordion>
+
+  <Accordion title="Database Corruption">
+    **Symptoms**: "corrupted database" error messages
+
+    **Solutions**:
+    <CodeGroup>
+    ```typescript Corruption Detection (db.ts:198)
+    // Backend automatically detects and removes corrupted databases
+    return list.filter((db) => {
+      if (db.type !== "error") return true;
+      const msg = (db.error ?? "").toLowerCase();
+      return !msg.includes("corrupted database detected and removed");
+    });
+    ```
+    </CodeGroup>
+
+    1. Re-download the database from a trusted source
+    2. Check disk health (run `chkdsk` or `fsck`)
+    3. Ensure sufficient disk space during operations
+    4. Avoid force-closing during write operations
+  </Accordion>
+
+  <Accordion title="Missing Tables">
+    **Symptoms**: "no such table" errors
+
+    <CodeGroup>
+    ```typescript Error Handling (db.ts:160)
+    catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.toLowerCase().includes("no such table")) {
+        return { data: [], count: 0 };  // Return empty result
+      }
+      throw error;
+    }
+    ```
+    </CodeGroup>
+
+    1. Database may be incompatible format
+    2. Re-import from PGN source
+    3. Download fresh copy from Databases page
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices Summary
+
+<CardGroup cols={2}>
+  <Card title="Use Position Cache" icon="bolt">
+    Download and use the Position Cache database for 10-50x faster position searches.
+  </Card>
+  <Card title="Optimize Queries" icon="gauge-high">
+    Use `skipCount`, normalize ranges, and limit game details for faster results.
+  </Card>
+  <Card title="Fast Storage" icon="hard-drive">
+    Store databases on SSD for best performance, especially for large databases.
+  </Card>
+  <Card title="Regular Maintenance" icon="broom">
+    Periodically vacuum databases and clear cache to maintain optimal performance.
+  </Card>
+  <Card title="Monitor Performance" icon="chart-line">
+    Enable performance monitoring to identify slow queries and bottlenecks.
+  </Card>
+  <Card title="Precache Openings" icon="chess-knight">
+    Use opening precaching for frequently analyzed opening positions.
+  </Card>
+</CardGroup>
+
+## Related Resources
+
+<CardGroup cols={3}>
+  <Card title="Database Management" icon="database" href="/guide/database-management">
+    Learn about importing and managing databases
+  </Card>
+  <Card title="Position Search" icon="magnifying-glass" href="/guide/position-search">
+    Advanced position search techniques
+  </Card>
+  <Card title="Customization" icon="gear" href="/features/customization">
+    Configure database and performance settings
+  </Card>
+</CardGroup>

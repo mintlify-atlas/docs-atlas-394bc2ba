@@ -1,0 +1,257 @@
+---
+title: Managing Profiles
+description: Create and manage player profiles to organize your chess games and track your progress
+---
+
+Profiles in Obsidian Chess Studio allow you to organize games by player, link online accounts, and track statistics across different platforms.
+
+## Creating a Profile
+
+<Steps>
+  <Step title="Open the Profiles Page">
+    Navigate to the Profiles section from the main navigation menu.
+  </Step>
+  
+  <Step title="Add a New Profile">
+    Click the **Add Profile** button in the top-right corner.
+  </Step>
+  
+  <Step title="Enter Profile Details">
+    Fill in the following information:
+    - **Name**: The player's name (required)
+    - **FIDE ID**: Optional FIDE identification number for OTB players
+    - **Lichess Token**: Optional OAuth token for enhanced Lichess features
+  </Step>
+  
+  <Step title="Save the Profile">
+    Click **Save** to create the profile. A dedicated database will be automatically created to store all games for this profile.
+  </Step>
+</Steps>
+
+<Note>
+  Each profile gets its own SQLite database (stored as `profile_{id}.db3`) to organize all associated games efficiently.
+</Note>
+
+## Linking Online Accounts
+
+You can link Lichess and Chess.com accounts to any profile to automatically sync your online games.
+
+### Adding a Lichess Account
+
+<Steps>
+  <Step title="Click Add Account">
+    From the Profiles page, click **Add Account** or click the **+** icon next to a specific profile.
+  </Step>
+  
+  <Step title="Select Profile and Platform">
+    - Choose the profile to link the account to
+    - Select **Lichess** as the platform
+    - Enter your Lichess username
+  </Step>
+  
+  <Step title="Choose Authentication Method">
+    **Option 1: Without Login** (Public games only)
+    - Leave "Login with browser" unchecked
+    - Only public games will be downloaded
+    
+    **Option 2: With Browser Login** (All games, faster)
+    - Check "Login with browser"
+    - Authenticate via OAuth in your browser
+    - All games (including private) will be synced faster
+  </Step>
+  
+  <Step title="Automatic Sync">
+    Once linked, Obsidian Chess Studio will automatically:
+    - Download all your games
+    - Import them into the profile database
+    - Update statistics and ratings
+    - Check for new games periodically
+  </Step>
+</Steps>
+
+### Adding a Chess.com Account
+
+<Steps>
+  <Step title="Select Chess.com Platform">
+    When adding an account, select **Chess.com** as the platform.
+  </Step>
+  
+  <Step title="Enter Username">
+    Provide your Chess.com username.
+  </Step>
+  
+  <Step title="Automatic Download">
+    The app will use the Chess.com Public API to:
+    - Fetch your player statistics
+    - Download game archives month by month
+    - Import games into the profile database
+  </Step>
+</Steps>
+
+<Warning>
+  Chess.com rate limits apply - large accounts may take some time to sync initially. The app respects rate limits and will show progress during sync.
+</Warning>
+
+## Account Verification
+
+For certain accounts, you may be prompted to verify ownership:
+
+1. When prompted, enter your platform credentials
+2. The app validates your credentials securely
+3. Upon successful verification, the account will be linked and games will download
+
+<Note>
+  Credentials are only used for verification and are not stored permanently.
+</Note>
+
+## Managing Multiple Profiles
+
+### Switching Active Profile
+
+- Click the star icon next to any profile to set it as the **active profile**
+- The active profile is used by default when analyzing positions or viewing statistics
+
+### Editing Profiles
+
+1. Click the **Edit** icon next to any profile
+2. Update the name, FIDE ID, or Lichess token
+3. Save changes
+
+### Deleting Profiles
+
+<Warning>
+  You cannot delete a profile that has linked accounts. First unlink all accounts, then delete the profile.
+</Warning>
+
+1. Click the **Delete** icon next to a profile
+2. Confirm the deletion
+3. The profile database will be permanently removed
+
+## Profile Statistics
+
+Each profile shows:
+
+- **Last Activity**: Most recent game or online activity date
+- **Linked Accounts**: All connected Lichess/Chess.com accounts
+- **Account Status**: Sync status and game counts
+
+### Viewing Detailed Statistics
+
+Click on any profile to view detailed panels:
+
+<Tabs>
+  <Tab title="Database">
+    View the profile's database in the integrated database viewer with all games, players, and tournaments.
+  </Tab>
+  
+  <Tab title="Overview">
+    See overall performance statistics:
+    - Win/Loss/Draw percentages
+    - Performance by time control
+    - Recent activity trends
+  </Tab>
+  
+  <Tab title="Ratings">
+    Track rating progression over time:
+    - Rating charts by time control
+    - Peak and current ratings
+    - Rating distribution
+  </Tab>
+  
+  <Tab title="Openings">
+    Analyze your opening repertoire:
+    - Most played openings as White and Black
+    - Success rates by opening
+    - Opening frequency and performance
+  </Tab>
+  
+  <Tab title="Stats">
+    Deep dive into game statistics:
+    - Phase performance (opening, middlegame, endgame)
+    - Average game length
+    - Performance by opponent rating range
+  </Tab>
+  
+  <Tab title="Pawn Structures">
+    Analyze typical pawn structures in your games and their outcomes.
+  </Tab>
+</Tabs>
+
+## Syncing Games
+
+Games are automatically synced when:
+- You first link an account
+- The app starts (if more than 24 hours since last sync)
+- You manually refresh from the Profiles page
+
+### Sync Progress
+
+During sync, you'll see notifications showing:
+- Current batch being processed
+- Rate limit cooldowns (for Chess.com)
+- Total games imported
+- Optimization operations
+
+### Handling Sync Errors
+
+- **Network errors**: The app will retry with exponential backoff
+- **Rate limits**: The app will wait for the cooldown period
+- **Invalid credentials**: Re-verify your account
+
+## Unlinking Accounts
+
+To remove an account from a profile:
+
+1. Find the account in the Accounts column
+2. Click the **Remove** (trash) icon
+3. Confirm removal
+4. The account's PGN file and analyzed games will be deleted
+
+<Note>
+  Unlinking an account does not delete games already imported into the profile database. Only new syncs will stop.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="One Profile Per Player" icon="user">
+    Create separate profiles for different players you coach or track. This keeps statistics isolated and accurate.
+  </Card>
+  
+  <Card title="Link All Platforms" icon="link">
+    Link both Lichess and Chess.com accounts to a single profile to get a complete picture of your chess activity.
+  </Card>
+  
+  <Card title="Use FIDE ID for OTB" icon="trophy">
+    Add your FIDE ID to help match and verify over-the-board tournament games.
+  </Card>
+  
+  <Card title="Regular Syncs" icon="refresh">
+    Keep accounts linked for automatic syncing. The app will check for new games periodically without manual intervention.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Games Not Syncing
+
+1. Check your internet connection
+2. Verify the username is correct
+3. For Lichess with login: Re-authenticate via browser
+4. Check notification center for error details
+
+### Duplicate Games
+
+The app automatically deduplicates games based on:
+- Player names
+- Date
+- Site/Event
+- Move sequence
+
+Duplicates are not imported twice.
+
+### Missing Games
+
+- For Chess.com: Bot games are excluded from public archives
+- For Lichess: Ensure "Login with browser" is used for private games
+- Check the sync completed successfully without errors

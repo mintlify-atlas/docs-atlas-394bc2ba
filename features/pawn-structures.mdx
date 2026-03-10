@@ -1,0 +1,534 @@
+---
+title: Pawn Structure Analysis
+description: Identify and analyze pawn structures in your games with frequency statistics and filtering
+---
+
+## Overview
+
+Pawn structure analysis identifies recurring pawn formations in your games, providing insights into positional patterns and strategic themes. The system recognizes both generic structural motifs (isolated pawns, passed pawns) and named structures (Carlsbad, Maróczy Bind).
+
+## Structure Identification
+
+### Pawn Structure Signature
+
+Each position is reduced to a pawn-only signature for pattern matching:
+
+```rust
+// src-tauri/src/pawn_structures.rs:675
+fn pawn_structure_signature_from_fen(fen: &str, mode: &str, player_color: Color) -> String {
+    // Extract only pawn placement from FEN
+    // Example: "8/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/8"
+}
+```
+
+### Analysis Modes
+
+<ParamField path="pawn_structure_mode" type="enum" default="both">
+  Structure analysis mode:
+  - `player`: Analyze only the player's pawns
+  - `both`: Analyze both sides' pawn structures
+</ParamField>
+
+<CodeGroup>
+```rust Player Mode
+// Keep only player's pawns, normalize to 'P'
+"8/8/8/8/4P3/8/PPPP1PPP/8"
+```
+
+```rust Both Mode  
+// Keep both sides' pawns with original case
+"8/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/8"
+```
+</CodeGroup>
+
+## Structural Motifs
+
+### Detected Motifs
+
+The system detects the following pawn structure characteristics:
+
+<AccordionGroup>
+  <Accordion title="Islands" icon="chess-board">
+    **Pawn Islands**: Groups of pawns separated by empty files
+    
+    ```rust
+    fn count_pawn_islands(ps: &PawnSets) -> u8 {
+        let mut islands = 0u8;
+        let mut in_island = false;
+        for f in 0..8 {
+            let has = ps.file_counts[f] > 0;
+            if has && !in_island {
+                islands += 1;
+                in_island = true;
+            } else if !has {
+                in_island = false;
+            }
+        }
+        islands
+    }
+    ```
+    
+    Triggered when: 3+ pawn islands detected
+  </Accordion>
+
+  <Accordion title="Isolated Pawns" icon="chess-pawn">
+    **Isolated Pawn**: A pawn with no friendly pawns on adjacent files
+    
+    ```rust
+    fn has_isolated_pawn(ps: &PawnSets) -> bool {
+        for f in 0..8 {
+            if ps.file_counts[f] == 0 { continue; }
+            
+            let left = if f > 0 { ps.file_counts[f - 1] } else { 0 };
+            let right = if f < 7 { ps.file_counts[f + 1] } else { 0 };
+            
+            if left == 0 && right == 0 {
+                return true;
+            }
+        }
+        false
+    }
+    ```
+    
+    **Weakness**: Cannot be defended by other pawns
+  </Accordion>
+
+  <Accordion title="Doubled Pawns" icon="chess-pawn">
+    **Doubled Pawns**: Multiple pawns on the same file
+    
+    ```rust
+    fn has_doubled_pawns(ps: &PawnSets) -> bool {
+        ps.file_counts.iter().any(|&c| c >= 2)
+    }
+    ```
+    
+    **Weakness**: Reduced mobility, harder to defend
+  </Accordion>
+
+  <Accordion title="Passed Pawns" icon="chess-pawn">
+    **Passed Pawn**: A pawn with no enemy pawns blocking its advance
+    
+    ```rust
+    fn is_passed_pawn(color: Color, ps: &PawnSets, opp: &PawnSets, file: usize, rank: usize) -> bool {
+        let files = [file.saturating_sub(1), file, (file + 1).min(7)];
+        match color {
+            Color::White => {
+                // Check if opponent has pawns ahead on adjacent files
+                for f in files {
+                    for r in (rank + 1)..8 {
+                        if opp.squares[f][r] { return false; }
+                    }
+                }
+                true
+            },
+            // ...
+        }
+    }
+    ```
+    
+    **Strength**: Major endgame advantage
+  </Accordion>
+
+  <Accordion title="Connected Passed Pawns" icon="chess-pawn">
+    **Connected Passed Pawns**: Two passed pawns on adjacent files
+    
+    ```rust
+    fn has_connected_passed_pawns(color: Color, ps: &PawnSets, opp: &PawnSets) -> bool {
+        // Identify all passed pawns by file
+        let mut passed_by_file: [bool; 8] = [false; 8];
+        for f in 0..8 {
+            for r in 0..8 {
+                if ps.squares[f][r] && is_passed_pawn(color, ps, opp, f, r) {
+                    passed_by_file[f] = true;
+                }
+            }
+        }
+        
+        // Check for adjacent passed pawns
+        for f in 0..7 {
+            if passed_by_file[f] && passed_by_file[f + 1] {
+                return true;
+            }
+        }
+        false
+    }
+    ```
+    
+    **Strength**: Very powerful, often decisive
+  </Accordion>
+
+  <Accordion title="Hanging Pawns" icon="chess-pawn">
+    **Hanging Pawns**: Pawns on c4/d4 (or c5/d5) without support from b/e pawns
+    
+    ```rust
+    fn has_hanging_pawns(ps: &PawnSets) -> bool {
+        let c = ps.file_counts[2] > 0;  // c-file
+        let d = ps.file_counts[3] > 0;  // d-file
+        let b = ps.file_counts[1] > 0;  // b-file
+        let e = ps.file_counts[4] > 0;  // e-file
+        c && d && !b && !e
+    }
+    ```
+    
+    **Dynamic**: Can be strength or weakness depending on position
+  </Accordion>
+
+  <Accordion title="Backward Pawns" icon="chess-pawn">
+    **Backward Pawn**: A pawn behind adjacent pawns with its advance square attacked
+    
+    ```rust
+    fn has_backward_pawn(color: Color, ps: &PawnSets, opp: &PawnSets) -> bool {
+        for f in 0..8 {
+            for r in 0..8 {
+                if !ps.squares[f][r] { continue; }
+                
+                // Check if adjacent pawns are more advanced
+                let left_advanced = /* ... */;
+                let right_advanced = /* ... */;
+                if !(left_advanced || right_advanced) { continue; }
+                
+                // Check if advance square is attacked by enemy pawn
+                let advance_rank = /* ... */;
+                let attacked = /* check enemy pawn attacks */;
+                
+                if attacked { return true; }
+            }
+        }
+        false
+    }
+    ```
+    
+    **Weakness**: Cannot advance safely
+  </Accordion>
+
+  <Accordion title="IQP (Isolated Queen Pawn)" icon="chess-pawn">
+    **Isolated Queen Pawn**: Pawn on d-file with no pawns on c/e files
+    
+    ```rust
+    fn has_iqp(ps: &PawnSets) -> bool {
+        let d = ps.file_counts[3] > 0;  // d-file
+        let c = ps.file_counts[2] > 0;  // c-file
+        let e = ps.file_counts[4] > 0;  // e-file
+        d && !c && !e
+    }
+    ```
+    
+    **Complex**: Dynamic play, often leads to middlegame attacks
+  </Accordion>
+
+  <Accordion title="Fianchetto" icon="chess-bishop">
+    **Fianchetto**: Classic kingside fianchetto pawn structure
+    
+    ```rust
+    fn has_fianchetto(color: Color, ps: &PawnSets) -> bool {
+        match color {
+            Color::White => {
+                let g3 = ps.squares[6][2];  // g3
+                let f2 = ps.squares[5][1];  // f2  
+                let h2 = ps.squares[7][1];  // h2
+                g3 && f2 && h2
+            },
+            // ...
+        }
+    }
+    ```
+    
+    **Strength**: Solid kingside, bishop on long diagonal
+  </Accordion>
+
+  <Accordion title="Minority Attack Pattern" icon="chess-knight">
+    **Minority Attack**: a+b pawns vs opponent's a+b+c pawns
+    
+    ```rust
+    fn has_minority_attack_pattern(color: Color, ps: &PawnSets, opp: &PawnSets) -> bool {
+        let has_a = ps.file_counts[0] > 0;
+        let has_b = ps.file_counts[1] > 0;
+        let opp_has_a = opp.file_counts[0] > 0;
+        let opp_has_b = opp.file_counts[1] > 0;
+        let opp_has_c = opp.file_counts[2] > 0;
+        
+        has_a && has_b && opp_has_a && opp_has_b && opp_has_c
+    }
+    ```
+    
+    **Strategy**: Attack queenside pawn majority
+  </Accordion>
+</AccordionGroup>
+
+## Named Structures
+
+### Recognized Structures
+
+The system recognizes famous pawn structures from opening theory:
+
+<CardGroup cols={2}>
+  <Card title="Carlsbad Structure" icon="chess-board">
+    Classic Queen's Gambit structure:
+    - White: a2, b2, d4, e3, f2, g2, h2
+    - Black: a7, b7, c6, d5, f7, g7, h7
+    
+    Characterized by IQP and minority attack themes
+  </Card>
+
+  <Card title="Maróczy Bind" icon="chess-board">
+    Sicilian structure with c4+e4 pawns
+    
+    Restricts Black's ...d5 break
+  </Card>
+
+  <Card title="Hedgehog" icon="chess-board">
+    Black setup: a6, b6, d6, e6
+    
+    Flexible, spring-loaded structure
+  </Card>
+
+  <Card title="Stonewall" icon="chess-board">
+    White: c3, d4, e3, f4
+    Black: c6, d5, e6, f5
+    
+    Closed center, kingside attack
+  </Card>
+
+  <Card title="Scheveningen" icon="chess-board">
+    Sicilian structure: c5, d6, e6
+    
+    Solid, flexible setup
+  </Card>
+
+  <Card title="Najdorf" icon="chess-board">
+    Sicilian structure: a6, c5, d6
+    
+    Sharp, tactical positions
+  </Card>
+
+  <Card title="Dragon" icon="chess-board">
+    Sicilian structure: g6, c5, d6
+    
+    Opposite-side castling attacks
+  </Card>
+
+  <Card title="Benoni" icon="chess-board">
+    Black: c5, d6 vs White: d5
+    
+    Imbalanced structure
+  </Card>
+
+  <Card title="Benko" icon="chess-board">
+    Gambit structure: a6, b5, c5
+    
+    Queenside pressure compensation
+  </Card>
+
+  <Card title="French" icon="chess-board">
+    Black: d5, e6 vs White: d4, e5
+    
+    Closed center, space advantage
+  </Card>
+
+  <Card title="Slav" icon="chess-board">
+    Black structure: c6, d5
+    
+    Solid Queen's Gambit defense
+  </Card>
+
+  <Card title="Semi-Slav Triangle" icon="chess-board">
+    Black structure: c6, d5, e6
+    
+    Rich middlegame positions
+  </Card>
+
+  <Card title="King's Indian" icon="chess-board">
+    Black structure: d6, e5, g6
+    
+    Kingside pawn storm
+  </Card>
+</CardGroup>
+
+## Filtering Structures
+
+### Motif Filters
+
+Filter games by specific pawn structure characteristics:
+
+```typescript
+const options: PawnStructureOptions = {
+  player_ids: [123],
+  pawn_structure_mode: 'both',
+  structure_filters: [
+    'isolated',          // Positions with isolated pawns
+    'passed',           // Positions with passed pawns  
+    'doubled'           // Positions with doubled pawns
+  ],
+  move_number: 20,     // Analyze structure after move 20
+  // ...
+};
+```
+
+**Available motif filters**:
+- `islands` - Multiple pawn islands (3+)
+- `isolated` - Isolated pawns
+- `doubled` - Doubled pawns
+- `passed` - Passed pawns
+- `connected_passed` - Connected passed pawns
+- `hanging` - Hanging pawns
+- `backward` - Backward pawns  
+- `minority_attack` - Minority attack pattern
+- `iqp` - Isolated Queen Pawn
+- `fianchetto` - Fianchetto structure
+
+### Named Structure Filters
+
+Filter games by specific named structures:
+
+```typescript
+const options: PawnStructureOptions = {
+  player_ids: [123],
+  pawn_structure_mode: 'both',
+  structure_name_filters: [
+    'carlsbad',
+    'maroczy_bind',
+    'hedgehog'
+  ],
+  // ...
+};
+```
+
+**Available named filters**:
+- `carlsbad`, `maroczy_bind`, `hedgehog`, `stonewall`
+- `scheveningen`, `najdorf`, `dragon`
+- `benoni`, `benko`, `french`
+- `slav`, `semi_slav_triangle`, `kings_indian`
+
+### Filter Semantics
+
+<Note>
+**Motif filters** use AND logic: All selected motifs must be present.
+
+**Named structure filters** use OR logic: Any selected structure matches.
+</Note>
+
+```rust
+let motifs_ok = if wanted_motif_mask == 0 {
+    true
+} else {
+    (motif_mask & wanted_motif_mask) == wanted_motif_mask  // AND
+};
+
+let named_ok = if wanted_named_structure_mask == 0 {
+    true
+} else {
+    (named_mask & wanted_named_structure_mask) != 0  // OR
+};
+```
+
+## Structure Statistics
+
+### Frequency Analysis
+
+Track how often each structure appears:
+
+```typescript
+interface PawnStructureStat {
+  structure: string;        // Pawn-only FEN signature
+  frequency: number;        // Number of games with this structure
+  win_rate: number;         // Win rate (0.0 - 1.0)
+  sample_fen: string | null;  // Example position FEN
+  games: PawnStructureGame[];  // Up to 50 sample games
+}
+
+interface PawnStructureGame {
+  game_id: number;
+  white: string;
+  black: string;
+  white_elo: number | null;
+  black_elo: number | null;
+  result: string;  // "1-0", "0-1", "1/2-1/2"
+  fen: string;     // Full position FEN
+}
+```
+
+### Win Rate Calculation
+
+```rust
+fn determine_win(result: &str, player_color: Color) -> f64 {
+    match (result, player_color) {
+        ("1-0", Color::White) | ("0-1", Color::Black) => 1.0,
+        ("1/2-1/2", _) => 0.5,
+        ("0-1", Color::White) | ("1-0", Color::Black) => 0.0,
+        _ => 0.0,
+    }
+}
+
+let win_rate = if frequency > 0 {
+    total_wins / frequency as f64
+} else {
+    0.0
+};
+```
+
+## Practical Examples
+
+### Example 1: Isolated Pawn Performance
+
+Find all games where you had an isolated pawn:
+
+```typescript
+const results = await invoke('compute_pawn_structures', {
+  file: dbPath,
+  options: {
+    player_ids: [myPlayerId],
+    pawn_structure_mode: 'player',  // Only my pawns
+    structure_filters: ['isolated'],
+    player_color: 'any',
+    move_number: 15,  // Middle of opening
+    date_range: 'OneYear'
+  }
+});
+
+console.log(`IQP games: ${results.reduce((sum, s) => sum + s.frequency, 0)}`);
+console.log(`Win rate: ${(results[0]?.win_rate * 100).toFixed(1)}%`);
+```
+
+### Example 2: Carlsbad Structure Performance
+
+Analyze performance in Carlsbad structures:
+
+```typescript
+const carlsbad = await invoke('compute_pawn_structures', {
+  file: dbPath,
+  options: {
+    player_ids: [myPlayerId],
+    pawn_structure_mode: 'both',
+    structure_name_filters: ['carlsbad'],
+    move_number: 20,
+    color_filter: 'white'  // As White only
+  }
+});
+
+for (const stat of carlsbad) {
+  console.log(`Games: ${stat.frequency}, Win rate: ${(stat.win_rate * 100).toFixed(1)}%`);
+  console.log(`Sample games:`, stat.games.slice(0, 5));
+}
+```
+
+## Performance Considerations
+
+<Warning>
+**Large Database Warning**: Structure analysis on databases with 10,000+ games may take several seconds. Consider:
+- Filtering by date range first
+- Using specific player IDs
+- Analyzing smaller move number ranges
+</Warning>
+
+### Optimization Tips
+
+1. **Early filtering**: Apply platform/time control filters before structure analysis
+2. **Move number selection**: Later move numbers (30+) have more unique structures
+3. **Result limiting**: The function returns top 20 structures by frequency
+4. **Sample game limiting**: Only 50 sample games are stored per structure
+
+## Related
+
+- [Opening Analysis](/features/opening-analysis)
+- [Player Statistics](/features/player-statistics)
+- [Position Search](/guide/position-search)

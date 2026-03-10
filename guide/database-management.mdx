@@ -1,0 +1,409 @@
+---
+title: Database Management
+description: Create, manage, and organize chess game databases for efficient game storage and retrieval
+---
+
+Databases in Obsidian Chess Studio are SQLite files that store chess games, player information, tournaments, and metadata for fast searching and analysis.
+
+## Creating a Database
+
+<Steps>
+  <Step title="Navigate to Databases">
+    Click on **Databases** in the main navigation menu.
+  </Step>
+  
+  <Step title="Click Add New">
+    Click the **Add New** button in the top-right corner.
+  </Step>
+  
+  <Step title="Choose Creation Method">
+    Select how to create your database:
+    
+    <Tabs>
+      <Tab title="Empty Database">
+        Create a blank database:
+        - Enter a name for your database
+        - Choose a location to save the `.db3` file
+        - Click **Create**
+      </Tab>
+      
+      <Tab title="From PGN">
+        Create and populate from PGN files:
+        - Select one or more PGN files
+        - Enter a database name
+        - The app will create the database and import all games
+      </Tab>
+      
+      <Tab title="From Online Tournament">
+        Import a complete online tournament:
+        - Select platform (Lichess or Chess.com)
+        - Enter tournament ID or URL
+        - A database will be created with all tournament games
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Database Created">
+    Your new database appears in the database list and is ready to use.
+  </Step>
+</Steps>
+
+<Note>
+  Databases are stored as `.db3` files (SQLite format) in your app's database folder. Profile databases are automatically created when you create a profile.
+</Note>
+
+## Database Types
+
+### Local Game Databases
+
+Standard databases you create:
+- Full read/write access
+- Can add, edit, and delete games
+- Can be exported, merged, or deleted
+- Indexed for fast searching
+
+### Profile Databases
+
+Automatically created for each profile:
+- Stored as `profile_{id}.db3`
+- Contains all games from linked accounts
+- Used for personal statistics and tracking
+- Not shown in the main databases list (accessed via Profiles)
+
+### Online Tournament Databases
+
+Created from online tournament imports:
+- Read-only (linked to online source)
+- Marked with "online" source tag
+- Can be merged into local databases
+- Automatically named after the tournament
+
+## Importing Large PGN Files
+
+For master game collections or large archives:
+
+<Steps>
+  <Step title="Prepare PGN File">
+    Ensure your PGN file is:
+    - Valid PGN format
+    - UTF-8 encoded
+    - Not corrupted (test with a PGN viewer first)
+  </Step>
+  
+  <Step title="Create Database from PGN">
+    Use the **Add New > From PGN** option.
+  </Step>
+  
+  <Step title="Monitor Progress">
+    The import shows:
+    - Games processed per second
+    - Total games imported
+    - Elapsed time
+    - Current batch
+  </Step>
+  
+  <Step title="Wait for Optimization">
+    After import, the database is optimized:
+    - Indexes are created for players, events, dates
+    - This ensures fast searching later
+    - May take a few minutes for very large databases (100k+ games)
+  </Step>
+</Steps>
+
+<Warning>
+  **Large Database Import Times:**
+  - 10,000 games: ~30 seconds
+  - 50,000 games: ~2-3 minutes
+  - 100,000 games: ~5-10 minutes
+  - 1,000,000+ games: ~30-60 minutes
+  
+  Times vary based on CPU speed and disk performance.
+</Warning>
+
+## Database Operations
+
+### Viewing Database Contents
+
+<Steps>
+  <Step title="Open Database">
+    Double-click any database in the list to open the database view.
+  </Step>
+  
+  <Step title="Explore Tabs">
+    The database view has three main tabs:
+    
+    <Tabs>
+      <Tab title="Games">
+        Browse all games with filtering and sorting:
+        - Filter by player, date range, result, rating
+        - Sort by date, ply count, rating
+        - Search by player names
+        - Click any game to view it on the analysis board
+      </Tab>
+      
+      <Tab title="Players">
+        View all players in the database:
+        - Player names and game counts
+        - Average ratings
+        - Performance statistics
+        - Click to filter games by player
+      </Tab>
+      
+      <Tab title="Tournaments">
+        View all events and tournaments:
+        - Event names and locations
+        - Date ranges
+        - Number of games per event
+        - Click to filter games by tournament
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+### Filtering Games
+
+Use the filter panel to narrow down games:
+
+<AccordionGroup>
+  <Accordion title="By Player">
+    - Search for player names (White or Black)
+    - Filter by specific player side
+    - Supports partial name matching
+  </Accordion>
+  
+  <Accordion title="By Date">
+    - Date range selector
+    - From date, to date
+    - Filter by year, month, or specific dates
+  </Accordion>
+  
+  <Accordion title="By Result">
+    - White wins (1-0)
+    - Black wins (0-1)
+    - Draws (1/2-1/2)
+    - Unknown/ongoing (*)
+  </Accordion>
+  
+  <Accordion title="By Rating">
+    - Minimum/maximum Elo range
+    - Filter by White or Black rating
+    - Find games within specific rating bands
+  </Accordion>
+  
+  <Accordion title="By Opening">
+    - Search by ECO code
+    - Filter by opening name
+    - Find games in your repertoire
+  </Accordion>
+</AccordionGroup>
+
+### Sorting Games
+
+Sort game lists by:
+- **Date**: Newest or oldest first
+- **Plies**: Shortest or longest games
+- **Rating**: Highest or lowest rated games
+- **White/Black**: Alphabetically by player name
+
+### Exporting Databases
+
+<Steps>
+  <Step title="Select Database">
+    Click on the database you want to export.
+  </Step>
+  
+  <Step title="Export to PGN">
+    Click the **Export** button and choose a location.
+  </Step>
+  
+  <Step title="PGN Generated">
+    All games are exported to a single PGN file with:
+    - Full game headers (players, event, date, etc.)
+    - All moves with variations and annotations
+    - Evaluation comments (if analyzed)
+  </Step>
+</Steps>
+
+<Note>
+  Exporting large databases may take a few minutes. The PGN file can be imported into other chess software or shared with others.
+</Note>
+
+## Reference Databases
+
+Set a database as a **reference database** for position searches:
+
+<Steps>
+  <Step title="Select Database">
+    Click on a database in the list.
+  </Step>
+  
+  <Step title="Set as Reference">
+    Click the **star icon** or "Set as Reference" button.
+  </Step>
+  
+  <Step title="Use in Position Search">
+    When you search for a position on the analysis board, the reference database is queried to find matching games.
+  </Step>
+</Steps>
+
+<Note>
+  Only one database can be the reference database at a time. This is useful for searching your personal games or a master game collection.
+</Note>
+
+## Merging Databases
+
+Combine multiple databases into one:
+
+<Steps>
+  <Step title="Open Target Database">
+    Open the database you want to merge others into.
+  </Step>
+  
+  <Step title="Go to Merge Tab">
+    If available, navigate to the **Merge** tab (shown for online tournament databases).
+  </Step>
+  
+  <Step title="Select Source Databases">
+    Choose which databases to merge from.
+  </Step>
+  
+  <Step title="Merge">
+    Click **Merge** to combine all games into the target database.
+    - Duplicates are automatically detected and skipped
+    - All games retain their original metadata
+  </Step>
+</Steps>
+
+## Database Maintenance
+
+### Optimizing Databases
+
+Over time, databases can become fragmented:
+
+1. **Automatic Optimization**: Runs after large imports
+2. **Manual Optimization**: Available in database settings
+
+**What Optimization Does:**
+- Rebuilds indexes for faster searches
+- Reclaims unused space
+- Improves query performance
+
+### Deleting Databases
+
+<Warning>
+  Deleting a database is permanent and cannot be undone. Export to PGN first if you want a backup.
+</Warning>
+
+<Steps>
+  <Step title="Select Database">
+    Click the database you want to delete.
+  </Step>
+  
+  <Step title="Click Delete">
+    Click the **Delete** (trash icon) button.
+  </Step>
+  
+  <Step title="Confirm Deletion">
+    Confirm that you want to permanently delete the database.
+  </Step>
+  
+  <Step title="Database Removed">
+    The `.db3` file is deleted from disk.
+  </Step>
+</Steps>
+
+## Database Statistics
+
+Each database shows:
+
+- **Game Count**: Total number of games
+- **Player Count**: Unique players in the database
+- **Event Count**: Number of tournaments/events
+- **Storage Size**: Disk space used by the database file
+- **Date Range**: Earliest and latest game dates
+
+## Advanced Database Features
+
+### Database Schema
+
+Obsidian Chess Studio uses a normalized SQLite schema:
+
+```sql
+Tables:
+- games (id, white_id, black_id, event_id, date, result, pgn, ...)
+- players (id, name, rating, ...)
+- events (id, name, site, date, ...)
+- positions (fen, game_id, ply, ...)
+```
+
+**Indexes on:**
+- Player names
+- Event names
+- Dates
+- Positions (FEN)
+
+This structure enables fast queries even on databases with millions of games.
+
+### Custom SQL Queries
+
+For advanced users, you can access the database directly:
+
+1. Locate the `.db3` file in your database folder
+2. Open with any SQLite client (DB Browser for SQLite, etc.)
+3. Run custom queries for advanced statistics
+
+<Note>
+  Direct database access is for advanced users only. Always back up before making changes.
+</Note>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Organize by Theme" icon="folder">
+    Create separate databases for different purposes:
+    - Personal games (use profiles instead)
+    - Master games by era
+    - Opening-specific collections
+    - Tournament archives
+  </Card>
+  
+  <Card title="Regular Exports" icon="download">
+    Periodically export important databases to PGN as backups.
+  </Card>
+  
+  <Card title="Use Reference Wisely" icon="star">
+    Set your most frequently searched database (e.g., master games) as the reference database.
+  </Card>
+  
+  <Card title="Clean Duplicates" icon="filter">
+    When merging databases, let the app handle deduplication automatically.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Database Won't Open
+
+1. Check if the file is corrupted
+2. Verify file permissions (read/write access)
+3. Try opening in a SQLite browser to verify integrity
+4. Restore from PGN backup if available
+
+### Slow Search Performance
+
+1. Optimize the database (Settings > Optimize)
+2. Ensure indexes are built (automatic after import)
+3. For very large databases, consider splitting by year or event
+
+### Import Errors
+
+- **PGN Parse Errors**: Fix the PGN file format
+- **Duplicate Games**: Normal - duplicates are skipped
+- **Memory Issues**: Close other applications or split PGN into smaller files
+
+### Missing Games After Import
+
+1. Check the import summary for errors
+2. Verify the PGN file contains valid games
+3. Search by different filters (some games may have missing metadata)
+4. Check if games were deduplicated (already existed)

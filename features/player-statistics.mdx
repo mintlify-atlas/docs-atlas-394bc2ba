@@ -1,0 +1,364 @@
+---
+title: Player Statistics
+description: Track performance metrics, rating progression, and playing style analysis
+---
+
+## Overview
+
+Obsidian Chess Studio provides comprehensive player statistics, including game results, rating timelines, opening performance, and playing style analysis. Statistics can be filtered by platform, time control, opponent strength, and date range.
+
+## Game Statistics
+
+### Performance Metrics
+
+Track overall performance across all games:
+
+```typescript
+interface GameStats {
+  total: number;              // Total games played
+  won: number;                // Games won
+  draw: number;               // Games drawn
+  lost: number;               // Games lost
+  data_per_month: MonthData[];  // Games played per month
+  unknown_count: number;      // Games with invalid dates
+}
+
+interface MonthData {
+  name: string;    // "YYYY-MM" format
+  count: number;   // Games in that month
+}
+```
+
+### Filtering Options
+
+Statistics can be filtered using multiple criteria:
+
+<ParamField path="platform" type="enum" default="All">
+  Platform filter:
+  - `All`: Include games from all platforms
+  - `Lichess`: Only Lichess games
+  - `ChessCom`: Only Chess.com games
+</ParamField>
+
+<ParamField path="time_control" type="enum" default="Any">
+  Time control filter:
+  - `Any`: All time controls
+  - `Bullet`: Games under 3 minutes
+  - `Blitz`: Games 3-10 minutes  
+  - `Rapid`: Games 10-25 minutes
+  - `Classical`: Games over 25 minutes
+</ParamField>
+
+<ParamField path="opponent_elo_bucket" type="string" default="all">
+  Opponent rating range (e.g., "1200" for 1200-1399)
+</ParamField>
+
+<ParamField path="date_range" type="enum" default="All">
+  Date range filter:
+  - `SevenDays`: Last 7 days
+  - `ThirtyDays`: Last 30 days
+  - `NinetyDays`: Last 90 days  
+  - `OneYear`: Last 365 days
+  - `All`: All games
+</ParamField>
+
+### Example: Filtered Statistics
+
+```typescript
+const filters: PlayerStatsFilters = {
+  platform: 'Lichess',
+  time_control: 'Blitz',
+  opponent_elo_bucket: '1600',  // 1600-1799 opponents
+  date_range: 'ThirtyDays'
+};
+
+const filteredGames = filter_games(siteStatsData, filters);
+const stats = extract_game_stats(filteredGames);
+
+console.log(`Win rate: ${(stats.won / stats.total * 100).toFixed(1)}%`);
+```
+
+## Rating Timeline
+
+### Rating Progression
+
+Track rating changes over time across multiple platforms:
+
+```typescript
+interface RatingTimeline {
+  data: RatingDataPoint[];  // Rating at each date
+  dates: number[];          // Timestamps in milliseconds
+  platforms: PlatformInfo[];  // Platform metadata
+}
+
+interface RatingDataPoint {
+  date: number;            // Timestamp in milliseconds
+  chesscom: number | null;  // Chess.com rating
+  lichess: number | null;   // Lichess rating
+}
+
+interface PlatformInfo {
+  key: string;      // "lichess" | "chesscom"
+  label: string;    // Display name
+  stroke: string;   // Chart line color
+}
+```
+
+### Rating Calculation
+
+Ratings are extracted from game data and grouped by date:
+
+```rust
+// src-tauri/src/db/player_stats.rs:574
+pub fn calculate_rating_timeline(games: &[StatsData], site: &str) -> RatingTimeline {
+    // Group ratings by date, keeping the maximum rating seen each day
+    for game in games {
+        if let Some(date) = parse_date_to_timestamp(&game.date) {
+            let existing = platform_map.get(&date).copied().unwrap_or(i32::MIN);
+            if game.player_elo > existing {
+                platform_map.insert(date, game.player_elo);
+            }
+        }
+    }
+    // ...
+}
+```
+
+### Rating Domain (Chart Bounds)
+
+Chart Y-axis bounds are calculated with 50-point rounding:
+
+```rust
+pub fn calculate_elo_domain(rating_series: &RatingTimeline) -> Option<EloDomain> {
+    // Find min/max ratings across all platforms
+    let mut min = i32::MAX;
+    let mut max = i32::MIN;
+    
+    for entry in &rating_series.data {
+        if let Some(rating) = entry.chesscom.or(entry.lichess) {
+            min = min.min(rating);
+            max = max.max(rating);
+        }
+    }
+    
+    Some(EloDomain {
+        min: (min / 50) * 50,        // Round down to nearest 50
+        max: ((max + 49) / 50) * 50  // Round up to nearest 50
+    })
+}
+```
+
+## Opening Statistics
+
+### Performance by Opening
+
+Analyze opening performance separately for White and Black:
+
+```typescript
+interface OpeningStats {
+  name: string;   // Opening name (e.g., "Sicilian Defense")
+  games: number;  // Total games with this opening
+  won: number;    // Games won
+  draw: number;   // Games drawn
+  lost: number;   // Games lost
+}
+```
+
+### Aggregating Openings
+
+```rust
+// src-tauri/src/db/player_stats.rs:408
+pub fn aggregate_openings(data: &[StatsData], color: bool) -> Vec<OpeningStats> {
+    let mut opening_map: HashMap<String, (usize, usize, usize)> = HashMap::new();
+    
+    for game in data.iter().filter(|d| d.is_player_white == color) {
+        let entry = opening_map.entry(game.opening.clone()).or_insert((0, 0, 0));
+        match game.result {
+            GameOutcome::Won => entry.0 += 1,
+            GameOutcome::Drawn => entry.1 += 1,
+            GameOutcome::Lost => entry.2 += 1,
+        }
+    }
+    // ...
+}
+```
+
+### Score Rate Calculation
+
+```rust
+pub fn get_score_rate(opening: &OpeningStats) -> f64 {
+    if opening.games == 0 {
+        return 0.0;
+    }
+    (opening.won as f64 + opening.draw as f64 * 0.5) / opening.games as f64
+}
+```
+
+### Sorting Options
+
+```rust
+pub fn sort_openings(openings: &mut [OpeningStats], sort_by: &str) {
+    match sort_by {
+        "score_asc" => openings.sort_by(|a, b| 
+            get_score_rate(a).partial_cmp(&get_score_rate(b))
+        ),
+        "score_desc" => openings.sort_by(|a, b| 
+            get_score_rate(b).partial_cmp(&get_score_rate(a))
+        ),
+        _ => openings.sort_by(|a, b| b.games.cmp(&a.games)),  // Default: by frequency
+    }
+}
+```
+
+## ELO Buckets
+
+### Opponent Strength Distribution
+
+Group opponents into rating buckets:
+
+```typescript
+interface EloBucket {
+  value: string;  // "1200", "1400", etc.
+  label: string;  // "1200-1399", "1400-1599", etc.
+}
+```
+
+### Bucket Calculation
+
+```rust
+// src-tauri/src/db/player_stats.rs:174
+pub fn calculate_elo_buckets(site_stats_data: &[SiteStatsData]) -> Vec<EloBucket> {
+    let mut buckets: HashSet<i32> = HashSet::new();
+    
+    for site in site_stats_data {
+        for game in &site.data {
+            if let Some(elo) = game.opponent_elo {
+                let bucket_start = (elo / 200) * 200;  // Round down to nearest 200
+                buckets.insert(bucket_start);
+            }
+        }
+    }
+    
+    // Sort and format
+    let mut sorted: Vec<i32> = buckets.into_iter().collect();
+    sorted.sort_unstable();
+    
+    sorted.into_iter().map(|start| EloBucket {
+        value: start.to_string(),
+        label: format!("{}-{}", start, start + 199)
+    }).collect()
+}
+```
+
+## Game Phase Analysis
+
+### Performance by Game Phase
+
+Analyze performance in opening, middlegame, and endgame phases based on move count:
+
+- **Opening**: Moves 1-15
+- **Middlegame**: Moves 16-40  
+- **Endgame**: Moves 41+
+
+<Tip>
+Game phase analysis helps identify weaknesses in specific stages of the game. If your endgame statistics are poor, consider studying endgame fundamentals.
+</Tip>
+
+## Player Style Analysis
+
+### Style Detection
+
+The application analyzes playing style based on game data:
+
+```typescript
+interface PlayerStyleLabel {
+  label: string;         // "playerStyle.aggressive", etc.
+  description: string;   // Style description
+  color: string;         // UI color indicator
+}
+```
+
+Style detection is implemented in `src-tauri/src/db/player_style.rs` (see source for algorithm details).
+
+## Date Processing
+
+### Month Parsing
+
+Optimized date parsing without regex:
+
+```rust
+// src-tauri/src/db/player_stats.rs:223
+fn parse_month_key(value: &str) -> Option<(i32, i32)> {
+    // Supports: "YYYY-MM", "YYYY-MM-DD", "YYYY.MM.DD", "YYYY/MM/DD"
+    // Fast path: no regex, no allocations
+    let s = value.trim();
+    let b = s.as_bytes();
+    
+    // Parse year (first 4 digits)
+    let year = ((b[0] - b'0') as i32) * 1000
+             + ((b[1] - b'0') as i32) * 100
+             + ((b[2] - b'0') as i32) * 10
+             + ((b[3] - b'0') as i32);
+    
+    // Parse month (skip separators, then read 1-2 digits)
+    // ...
+}
+```
+
+### Filling Missing Months
+
+Fill gaps in monthly data for continuous charts:
+
+```rust
+pub fn fill_missing_months(data: &[MonthData]) -> Vec<MonthData> {
+    // Parse start and end months
+    let start = parse_month_key(&data[0].name)?;
+    let end = parse_month_key(&data[data.len() - 1].name)?;
+    
+    // Generate all months in range
+    let mut month_strings = Vec::new();
+    let mut year = start.0;
+    let mut month = start.1;
+    
+    while year < end.0 || (year == end.0 && month <= end.1) {
+        month_strings.push(format!("{:04}-{:02}", year, month));
+        month += 1;
+        if month == 13 {
+            month = 1;
+            year += 1;
+        }
+    }
+    // ...
+}
+```
+
+## Performance Optimizations
+
+### Efficient Filtering
+
+<Tip>
+**Performance Tips**:
+1. **Filter early**: Apply platform/time control filters before date parsing
+2. **Cache results**: Store filtered results to avoid recomputation
+3. **Batch processing**: Process games in batches for large databases
+4. **Index dates**: Pre-parse dates once when loading games
+</Tip>
+
+### Date Range Calculation
+
+```rust
+// Optimized: find max date in single pass without sorting
+let mut max_date: Option<i64> = None;
+for (game, _) in &games {
+    if let Some(ts) = parse_date_to_timestamp(&game.date) {
+        max_date = Some(max_date.map_or(ts, |m| m.max(ts)));
+    }
+}
+```
+
+## Related Features
+
+- [Opening Analysis](/features/opening-analysis)
+- [Pawn Structures](/features/pawn-structures)
+- [Account Sync](/features/account-sync)
+- [Profile Management](/guide/profiles)

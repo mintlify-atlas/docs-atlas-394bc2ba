@@ -1,0 +1,277 @@
+---
+title: Development Overview
+description: Introduction to developing Obsidian Chess Studio
+---
+
+## Introduction
+
+Obsidian Chess Studio is a comprehensive, open-source chess analysis platform that combines powerful engine integration, advanced game analysis, and intelligent training systems. This guide will help you understand the architecture and get started with development.
+
+## Technology Stack
+
+<CardGroup cols={2}>
+  <Card title="Frontend" icon="react">
+    - **React 19** with TypeScript
+    - **Vite** for fast builds and HMR
+    - **Mantine UI** component library
+    - **TanStack Router** for routing
+    - **Jotai** for state management
+    - **Zustand** for additional stores
+  </Card>
+  
+  <Card title="Backend" icon="rust">
+    - **Rust** for performance
+    - **Tauri 2** desktop framework
+    - **Diesel** ORM for database
+    - **SQLite** for data storage
+    - **Tokio** async runtime
+    - **Rayon** for parallelization
+  </Card>
+  
+  <Card title="Chess Logic" icon="chess-knight">
+    - **chessops** (TypeScript)
+    - **shakmaty** (Rust)
+    - **pgn-reader** (Rust)
+    - **vampirc-uci** for engine communication
+    - **Chessground** for board UI
+  </Card>
+  
+  <Card title="Development Tools" icon="tools">
+    - **pnpm** package manager
+    - **Biome** for linting/formatting
+    - **Vitest** for testing
+    - **Cargo** for Rust builds
+    - **GitHub Actions** for CI/CD
+  </Card>
+</CardGroup>
+
+## Development Philosophy
+
+Obsidian Chess Studio is built with several core principles:
+
+### Performance First
+
+- **Rust backend** handles computationally intensive operations (database queries, PGN parsing, position analysis)
+- **Aggressive optimizations** in release builds (opt-level 3, thin LTO)
+- **Parallel processing** using Rayon for multi-core utilization
+- **Efficient caching** for frequent queries and position lookups
+- **SQLite indexing** for sub-second searches across millions of games
+
+### Cross-Platform Support
+
+Built on Tauri 2, the application runs natively on:
+- **Windows** (x64, ARM64)
+- **macOS** (Intel, Apple Silicon)
+- **Linux** (AppImage, deb, rpm)
+- **Android** (in progress)
+
+### User Experience
+
+- **Modern UI** with Mantine components
+- **Responsive design** that adapts to screen sizes
+- **Keyboard-first** navigation with customizable shortcuts
+- **Dark/light themes** with full customization
+- **i18n support** with 17+ languages
+
+### Open Source Commitment
+
+- **GPL-3.0 license** ensuring freedom
+- **Transparent development** on GitHub
+- **Community-driven** features and translations
+- **No telemetry** or tracking
+
+## Project Structure
+
+```
+Obsidian-Chess-Studio/
+├── src/                    # Frontend (React + TypeScript)
+│   ├── components/        # Reusable UI components
+│   ├── features/          # Feature modules
+│   ├── routes/            # TanStack Router pages
+│   ├── state/             # Jotai atoms and Zustand stores
+│   ├── utils/             # Helper functions
+│   └── locales/           # i18n translations
+├── src-tauri/             # Backend (Rust + Tauri)
+│   ├── src/
+│   │   ├── app/          # Platform-specific code
+│   │   ├── chess/        # Engine management
+│   │   ├── db/           # Database layer
+│   │   └── *.rs          # Command modules
+│   └── Cargo.toml
+├── package.json           # Frontend dependencies
+└── vite.config.ts         # Vite configuration
+```
+
+See [Project Structure](/development/project-structure) for detailed breakdown.
+
+## Getting Started
+
+<Steps>
+  <Step title="Install Prerequisites">
+    - [Node.js](https://nodejs.org/) (v18+)
+    - [pnpm](https://pnpm.io/) package manager
+    - [Rust](https://rustup.rs/) toolchain
+    - [Tauri prerequisites](https://tauri.app/start/prerequisites/)
+  </Step>
+  
+  <Step title="Clone Repository">
+    ```bash
+    git clone git@github.com:luisrivasnoriega/Obsidian-Chess-Studio.git
+    cd Obsidian-Chess-Studio
+    ```
+  </Step>
+  
+  <Step title="Install Dependencies">
+    ```bash
+    pnpm install
+    ```
+  </Step>
+  
+  <Step title="Run Development Server">
+    ```bash
+    pnpm dev
+    ```
+    This starts Vite dev server on port 1420 and launches the Tauri app with hot reload.
+  </Step>
+</Steps>
+
+## Development Commands
+
+<CodeGroup>
+```bash Development
+# Start dev server with hot reload
+pnpm dev
+
+# Start Vite only (without Tauri)
+pnpm start-vite
+```
+
+```bash Building
+# Build for production
+pnpm build
+
+# Build without bundling installer
+pnpm tauri build --no-bundle
+```
+
+```bash Testing
+# Run all tests
+pnpm test
+
+# Run tests with coverage
+pnpm vitest run --coverage
+
+# Run Rust tests
+cd src-tauri && cargo test
+```
+
+```bash Code Quality
+# Format code
+pnpm format
+
+# Lint and fix issues
+pnpm lint:fix
+
+# Type check
+pnpm lint
+```
+</CodeGroup>
+
+## Architecture Overview
+
+Obsidian Chess Studio uses a **frontend-backend split** architecture:
+
+### Frontend Responsibilities
+- UI rendering and user interactions
+- Chess board visualization (Chessground)
+- State management (Jotai/Zustand)
+- Routing and navigation
+- Client-side validation
+
+### Backend Responsibilities
+- Database operations (SQLite)
+- PGN parsing and game import
+- Chess engine management (UCI protocol)
+- Position search and indexing
+- File system operations
+- External API integrations (Lichess, Chess.com)
+
+### Communication
+
+Frontend and backend communicate via **Tauri commands**:
+
+```typescript
+// Frontend invokes backend command
+import { invoke } from '@tauri-apps/api/core';
+
+const games = await invoke('search_position', {
+  fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
+  exact: true
+});
+```
+
+```rust
+// Backend handles command
+#[tauri::command]
+pub fn search_position(fen: String, exact: bool) -> Result<Vec<Game>> {
+    // Database query logic
+}
+```
+
+See [Architecture](/development/architecture/frontend) for detailed information.
+
+## Key Features to Explore
+
+<CardGroup cols={2}>
+  <Card title="Multi-Engine Analysis" icon="microchip">
+    Simultaneous analysis with multiple UCI engines. See `src-tauri/src/chess/manager.rs`
+  </Card>
+  
+  <Card title="Database Search" icon="magnifying-glass">
+    Fast position search across millions of games. See `src-tauri/src/db/search.rs`
+  </Card>
+  
+  <Card title="Opening Repertoire" icon="book">
+    Tree-based repertoire training with spaced repetition. See `src/features/variants/`
+  </Card>
+  
+  <Card title="Game Analysis" icon="chart-line">
+    Automatic mistake detection and ACPL calculation. See `src-tauri/src/dashboard_games_history.rs`
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Building from Source" href="/development/building-from-source" icon="hammer">
+    Platform-specific build instructions
+  </Card>
+  
+  <Card title="Contributing" href="/development/contributing" icon="code-pull-request">
+    Guidelines for contributing code
+  </Card>
+  
+  <Card title="Testing" href="/development/testing" icon="flask">
+    Running and writing tests
+  </Card>
+  
+  <Card title="Translations" href="/development/translations" icon="language">
+    Adding new languages
+  </Card>
+</CardGroup>
+
+## Community
+
+<CardGroup cols={3}>
+  <Card title="GitHub Discussions" icon="github" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions">
+    Ask questions and share ideas
+  </Card>
+  
+  <Card title="Issues" icon="circle-exclamation" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues">
+    Report bugs and request features
+  </Card>
+  
+  <Card title="Contributing" icon="hand-holding-heart" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/blob/main/CONTRIBUTING.md">
+    Contribution guidelines
+  </Card>
+</CardGroup>

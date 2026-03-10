@@ -1,0 +1,388 @@
+---
+title: Position Search
+description: Search for chess positions in your databases to find similar games and explore transpositions
+---
+
+Position search allows you to find games that reached a specific position, helping you study openings, transpositions, and typical middlegame structures.
+
+## How Position Search Works
+
+Position search uses FEN (Forsyth-Edwards Notation) to represent board positions. When you search, Obsidian Chess Studio queries your databases to find games that reached the exact position.
+
+### What is FEN?
+
+FEN is a compact text representation of a chess position:
+
+```
+rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+```
+
+This encodes:
+- Piece placement on all 8 ranks
+- Side to move (w = White, b = Black)
+- Castling rights (KQkq)
+- En passant square
+- Halfmove clock
+- Fullmove number
+
+## Exact Position Search
+
+Find games that reached the exact position on the board:
+
+<Steps>
+  <Step title="Set Up Position">
+    Navigate to the position you want to search:
+    - Play through a game to a specific move
+    - Set up a position manually on the analysis board
+    - Paste a FEN to jump to a position
+  </Step>
+  
+  <Step title="Set Reference Database">
+    Ensure you have a reference database selected:
+    - Go to Databases page
+    - Click the star icon next to your master games database or personal database
+    - This database will be searched
+  </Step>
+  
+  <Step title="Search Position">
+    Click the **Search Position** button in the analysis panel.
+  </Step>
+  
+  <Step title="View Results">
+    A list of matching games appears:
+    - Player names (White vs Black)
+    - Tournament/event
+    - Date
+    - Result
+    - Move number where position occurred
+  </Step>
+  
+  <Step title="Open Game">
+    Click any result to load that game on the board at the exact position.
+  </Step>
+</Steps>
+
+<Note>
+  Exact search requires the position to match perfectly, including side to move and castling rights.
+</Note>
+
+## Partial Position Search
+
+Find games with similar piece placements, ignoring certain factors:
+
+### Ignore Side to Move
+
+Search for the position regardless of whose turn it is:
+- Useful when the position arose via transposition
+- Finds more results
+
+### Ignore Castling Rights
+
+Search without considering whether castling is still available:
+- Useful for positions where castling rights vary
+- Common in opening transpositions
+
+### Ignore En Passant
+
+Search without requiring the same en passant square:
+- Rarely needed but available for edge cases
+
+<Steps>
+  <Step title="Enable Partial Search">
+    In the position search settings, toggle:
+    - "Ignore side to move"
+    - "Ignore castling rights"
+    - "Ignore en passant"
+  </Step>
+  
+  <Step title="Run Search">
+    Click **Search Position** to find more games with flexible matching.
+  </Step>
+</Steps>
+
+## Filtering Search Results
+
+Narrow down position search results:
+
+<Tabs>
+  <Tab title="By Player">
+    Filter results to games where a specific player (White or Black) reached this position.
+  </Tab>
+  
+  <Tab title="By Result">
+    See only games that ended in:
+    - White wins
+    - Black wins
+    - Draws
+  </Tab>
+  
+  <Tab title="By Date Range">
+    Filter by when the game was played:
+    - Recent games
+    - Historical games
+    - Specific years
+  </Tab>
+  
+  <Tab title="By Rating">
+    Filter by player ratings:
+    - Master-level games (2500+)
+    - Club-level games (1500-2000)
+    - Custom rating ranges
+  </Tab>
+</Tabs>
+
+## Use Cases for Position Search
+
+### Opening Preparation
+
+Study how others have played a specific opening position:
+
+<Steps>
+  <Step title="Reach Opening Position">
+    Play the opening moves until you reach a critical position.
+  </Step>
+  
+  <Step title="Search">
+    Find all games in your master database that reached this position.
+  </Step>
+  
+  <Step title="Analyze Continuations">
+    Review what moves were played:
+    - Most common moves
+    - Success rates for each move
+    - Recent novelties or trends
+  </Step>
+  
+  <Step title="Build Repertoire">
+    Choose the lines that fit your style and add them to your repertoire.
+  </Step>
+</Steps>
+
+### Transposition Detection
+
+Find games that reached the same position via different move orders:
+
+```
+Example: Réti Opening transposing to Queen's Gambit
+
+1. Nf3 d5 2. c4 ...
+vs
+1. d4 d5 2. c4 Nf6 3. Nf3 ...
+```
+
+Position search finds both paths to the same structure.
+
+### Studying Pawn Structures
+
+Search for typical pawn structures to learn plans:
+
+<Steps>
+  <Step title="Identify Structure">
+    Set up a pawn structure (e.g., Carlsbad, Isolated Queen's Pawn, Maroczy Bind).
+  </Step>
+  
+  <Step title="Search">
+    Find games with this exact pawn formation.
+  </Step>
+  
+  <Step title="Study Plans">
+    Analyze how strong players handled the structure:
+    - Piece placement
+    - Typical breaks
+    - Winning plans
+  </Step>
+</Steps>
+
+### Endgame Study
+
+Find endgames of a specific type:
+
+- Rook endgames with specific pawn structures
+- Queen vs Rook endgames
+- Opposite-colored bishop endgames
+
+<Note>
+  Partial search is very useful for endgames where castling rights and side to move may vary.
+</Note>
+
+## Advanced Search Techniques
+
+### Material-Based Search
+
+While not a direct feature, you can:
+
+1. Set up a position with specific material (e.g., Rook + 3 pawns vs Rook + 2 pawns)
+2. Search for that position
+3. Find games with similar material imbalances
+
+### Motif Search
+
+Search for tactical or strategic motifs:
+
+1. Set up the position showing the motif (e.g., knight fork, back rank mate threat)
+2. Search to find games with that exact setup
+3. Study how the motif was executed or defended
+
+### Historical Opening Analysis
+
+Compare opening theory evolution:
+
+<Steps>
+  <Step title="Search Old Games">
+    Filter results to games before 1990.
+  </Step>
+  
+  <Step title="Search Modern Games">
+    Filter results to games after 2010.
+  </Step>
+  
+  <Step title="Compare">
+    See how evaluations and popular moves have changed over time.
+  </Step>
+</Steps>
+
+## Position Search Statistics
+
+For each position found, you can see:
+
+- **Total games**: Number of games reaching this position
+- **Score distribution**:
+  - White wins: X%
+  - Draws: Y%
+  - Black wins: Z%
+- **Most popular moves**: What players tried from this position
+- **Average rating**: Average Elo of games in the sample
+
+<Note>
+  Statistics are calculated from all matching games in the reference database.
+</Note>
+
+## Integrating with Analysis
+
+### Search from Game
+
+1. Load a game from your database or PGN file
+2. Navigate to any move
+3. Click **Search Position**
+4. See how others played from this position
+
+### Copy FEN for External Search
+
+<Steps>
+  <Step title="Copy FEN">
+    Right-click the board or use the keyboard shortcut (Ctrl/Cmd+Shift+C) to copy FEN.
+  </Step>
+  
+  <Step title="Search Online">
+    Paste the FEN into:
+    - Lichess Opening Explorer
+    - Chess.com Analysis
+    - Online master databases
+  </Step>
+  
+  <Step title="Compare Results">
+    See additional games and computer evaluations from online sources.
+  </Step>
+</Steps>
+
+## Building Custom Opening Books
+
+Use position search to create your own opening repertoire:
+
+<Steps>
+  <Step title="Search Key Positions">
+    For each critical position in your opening repertoire, run a position search.
+  </Step>
+  
+  <Step title="Collect Best Games">
+    Filter by:
+    - High-rated players (2600+)
+    - Recent games (last 5 years)
+    - Your color's wins
+  </Step>
+  
+  <Step title="Annotate">
+    Open each game and annotate key moves and ideas.
+  </Step>
+  
+  <Step title="Export as PGN">
+    Save all annotated games as your custom opening book.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### No Results Found
+
+<AccordionGroup>
+  <Accordion title="Position Not in Database">
+    **Issue:** The position has never occurred in your reference database.
+    
+    **Solution:**
+    - Try a different reference database (e.g., master games instead of personal games)
+    - Use partial search (ignore castling rights or side to move)
+    - Set up a slightly earlier position in the opening
+  </Accordion>
+  
+  <Accordion title="Wrong Reference Database">
+    **Issue:** You're searching a database that doesn't contain this type of position.
+    
+    **Solution:**
+    - Change the reference database to one more likely to contain the position
+    - For opening positions: Use a master games database
+    - For your games: Use your profile database
+  </Accordion>
+  
+  <Accordion title="Position Too Specific">
+    **Issue:** Exact search is too restrictive.
+    
+    **Solution:**
+    - Enable partial search options
+    - Search a few moves earlier when the position was more common
+  </Accordion>
+</AccordionGroup>
+
+### Too Many Results
+
+<AccordionGroup>
+  <Accordion title="Common Position">
+    **Issue:** The position is very common (e.g., starting position, early opening moves).
+    
+    **Solution:**
+    - Apply filters: rating range, date range, result
+    - Search a few moves deeper into the variation
+  </Accordion>
+</AccordionGroup>
+
+### Slow Search
+
+<AccordionGroup>
+  <Accordion title="Large Database">
+    **Issue:** Searching millions of games takes time.
+    
+    **Solution:**
+    - Ensure the database is optimized (indexes built)
+    - Use a smaller, curated database for faster searches
+    - Be patient - searches typically complete within seconds even on large databases
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Master Databases" icon="database">
+    For opening preparation, use large master game databases (100k+ games) as your reference for comprehensive results.
+  </Card>
+  
+  <Card title="Filter Intelligently" icon="filter">
+    When you get many results, filter by high-rated games or recent games to focus on relevant examples.
+  </Card>
+  
+  <Card title="Compare Move Orders" icon="random">
+    Use partial search to find transpositions and learn flexible move orders.
+  </Card>
+  
+  <Card title="Study Statistics" icon="chart-line">
+    Pay attention to score distributions - if White scores 65%, that position favors White significantly.
+  </Card>
+</CardGroup>

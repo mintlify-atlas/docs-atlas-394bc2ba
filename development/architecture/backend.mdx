@@ -1,0 +1,606 @@
+---
+title: Backend Architecture
+description: Rust, Tauri, and chess engine management in Obsidian Chess Studio
+---
+
+## Overview
+
+The backend is built with **Rust** and **Tauri 2**, providing high-performance chess analysis, database operations, and engine management.
+
+## Technology Stack
+
+<CardGroup cols={2}>
+  <Card title="Core Framework" icon="rust">
+    - **Rust 2021** - Systems programming language
+    - **Tauri 2.9** - Desktop framework
+    - **Tokio 1.49** - Async runtime
+    - **Rayon 1.11** - Data parallelism
+  </Card>
+  
+  <Card title="Database" icon="database">
+    - **Diesel 2.3** - ORM and query builder
+    - **SQLite** - Embedded database
+    - **r2d2** - Connection pooling
+    - **Rusqlite** - SQLite bindings
+  </Card>
+  
+  <Card title="Chess Logic" icon="chess-knight">
+    - **shakmaty 0.27** - Chess logic
+    - **pgn-reader 0.26** - PGN parsing
+    - **vampirc-uci 0.11** - UCI protocol
+    - **btoi** - Fast integer parsing
+  </Card>
+  
+  <Card title="Utilities" icon="tools">
+    - **serde** - Serialization
+    - **thiserror** - Error handling
+    - **specta** - TypeScript bindings
+    - **reqwest** - HTTP client
+  </Card>
+</CardGroup>
+
+## Project Structure
+
+```
+src-tauri/src/
+├── app/                   # Platform abstraction
+│   ├── platform/
+│   │   ├── desktop/       # Windows, macOS, Linux
+│   │   └── mobile/        # Android, iOS
+│   └── setup.rs           # App initialization
+├── chess/                 # Chess engine management
+│   ├── analysis.rs
+│   ├── commands.rs        # Tauri commands
+│   ├── manager.rs         # Engine lifecycle
+│   ├── process.rs         # Process spawning
+│   └── uci.rs             # UCI protocol
+├── db/                    # Database layer
+│   ├── core.rs            # Connection management
+│   ├── schema.rs          # Diesel schema
+│   ├── models.rs          # Data models
+│   ├── ops.rs             # CRUD operations
+│   ├── search.rs          # Position search
+│   ├── player_stats.rs    # Statistics queries
+│   └── ...
+├── analysis_storage.rs    # Analysis caching
+├── chessbase.rs           # ChessBase files
+├── error.rs               # Error types
+├── fide.rs                # FIDE integration
+├── fs.rs                  # File operations
+├── opening.rs             # Opening classification
+├── pawn_structures.rs     # Pawn analysis
+├── pgn.rs                 # PGN parsing
+├── puzzle.rs              # Puzzle system
+├── lib.rs                 # Library entry
+└── main.rs                # Binary entry
+```
+
+## Tauri Command Structure
+
+### Command Definition
+
+Tauri commands are Rust functions exposed to the frontend:
+
+```rust
+use tauri::command;
+use crate::error::Error;
+
+#[command]
+#[specta::specta]  // Generate TypeScript bindings
+pub async fn search_games(
+    filters: GameFilters,
+    app: tauri::AppHandle,
+) -> Result<Vec<Game>, Error> {
+    // Get database connection
+    let db = app.state::<DatabaseState>();
+    let conn = db.pool.get()?;
+    
+    // Perform search
+    let games = db::ops::search_games(&filters, &conn)?;
+    
+    Ok(games)
+}
+```
+
+**Key features:**
+- `#[command]` - Marks function as Tauri command
+- `#[specta::specta]` - Generates TypeScript types
+- `async` - Supports asynchronous operations
+- `Result<T, Error>` - Error handling
+- `AppHandle` - Access to app state
+
+### Registering Commands
+
+```rust
+// lib.rs
+use tauri::Builder;
+
+pub fn run() {
+    Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            search_games,
+            import_pgn,
+            start_engine,
+            get_player_stats,
+            // ... more commands
+        ])
+        .run(tauri::generate_context!())
+        .expect("error running application");
+}
+```
+
+## Chess Engine Management
+
+### UCI Protocol Implementation
+
+The chess engine system communicates using the **Universal Chess Interface (UCI)** protocol.
+
+```rust
+// chess/uci.rs
+use vampirc_uci::{UciMessage, parse};
+
+pub struct UciEngine {
+    process: Child,
+    stdin: ChildStdin,
+    stdout: BufReader<ChildStdout>,
+}
+
+impl UciEngine {
+    pub fn new(path: &Path) -> Result<Self, Error> {
+        let mut process = Command::new(path)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()?;
+        
+        let stdin = process.stdin.take().unwrap();
+        let stdout = BufReader::new(process.stdout.take().unwrap());
+        
+        Ok(Self { process, stdin, stdout })
+    }
+    
+    pub fn send_command(&mut self, cmd: UciMessage) -> Result<(), Error> {
+        writeln!(self.stdin, "{}", cmd)?;
+        self.stdin.flush()?;
+        Ok(())
+    }
+    
+    pub fn read_line(&mut self) -> Result<Option<UciMessage>, Error> {
+        let mut line = String::new();
+        
+        if self.stdout.read_line(&mut line)? == 0 {
+            return Ok(None);  // EOF
+        }
+        
+        match parse(&line) {
+            Ok(msg) => Ok(Some(msg)),
+            Err(e) => Err(Error::Engine(format!("Parse error: {}", e))),
+        }
+    }
+}
+```
+
+### Engine Manager
+
+Manages multiple engines simultaneously:
+
+```rust
+// chess/manager.rs
+use std::collections::HashMap;
+use tokio::sync::{mpsc, RwLock};
+
+pub struct EngineManager {
+    engines: RwLock<HashMap<String, Engine>>,
+    event_tx: mpsc::UnboundedSender<EngineEvent>,
+}
+
+impl EngineManager {
+    pub fn new(event_tx: mpsc::UnboundedSender<EngineEvent>) -> Self {
+        Self {
+            engines: RwLock::new(HashMap::new()),
+            event_tx,
+        }
+    }
+    
+    pub async fn start_engine(
+        &self,
+        id: String,
+        path: PathBuf,
+        options: EngineOptions,
+    ) -> Result<(), Error> {
+        let mut engine = UciEngine::new(&path)?;
+        
+        // Initialize engine
+        engine.send_command(UciMessage::Uci)?;
+        
+        // Wait for ready
+        loop {
+            if let Some(msg) = engine.read_line()? {
+                if matches!(msg, UciMessage::UciOk) {
+                    break;
+                }
+            }
+        }
+        
+        // Configure options
+        for (key, value) in options.iter() {
+            engine.send_command(UciMessage::SetOption { 
+                name: key.clone(), 
+                value: Some(value.clone()) 
+            })?;
+        }
+        
+        // Store engine
+        self.engines.write().await.insert(id.clone(), engine);
+        
+        // Spawn message handler
+        self.spawn_message_handler(id).await;
+        
+        Ok(())
+    }
+    
+    pub async fn analyze(
+        &self,
+        engine_id: &str,
+        fen: &str,
+        depth: u8,
+    ) -> Result<(), Error> {
+        let engines = self.engines.read().await;
+        let engine = engines.get(engine_id)
+            .ok_or_else(|| Error::Engine("Engine not found".into()))?;
+        
+        // Send position
+        engine.send_command(UciMessage::Position {
+            startpos: false,
+            fen: Some(fen.into()),
+            moves: vec![],
+        })?;
+        
+        // Start analysis
+        engine.send_command(UciMessage::Go {
+            depth: Some(depth),
+            // ... other parameters
+        })?;
+        
+        Ok(())
+    }
+    
+    async fn spawn_message_handler(&self, engine_id: String) {
+        let event_tx = self.event_tx.clone();
+        let engines = self.engines.clone();
+        
+        tokio::spawn(async move {
+            loop {
+                let msg = {
+                    let engines = engines.read().await;
+                    let engine = engines.get(&engine_id).unwrap();
+                    engine.read_line()
+                };
+                
+                match msg {
+                    Ok(Some(UciMessage::Info(info))) => {
+                        // Parse and send analysis update
+                        let _ = event_tx.send(EngineEvent::Analysis {
+                            engine_id: engine_id.clone(),
+                            depth: info.depth,
+                            score: info.score,
+                            pv: info.pv,
+                        });
+                    }
+                    Ok(Some(UciMessage::BestMove { best_move, ponder })) => {
+                        let _ = event_tx.send(EngineEvent::BestMove {
+                            engine_id: engine_id.clone(),
+                            best_move,
+                            ponder,
+                        });
+                    }
+                    Ok(None) => break,  // Engine stopped
+                    Err(e) => {
+                        eprintln!("Engine error: {}", e);
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        });
+    }
+}
+```
+
+## Database Layer
+
+### Connection Management
+
+```rust
+// db/core.rs
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::sqlite::SqliteConnection;
+
+pub type DbPool = Pool<ConnectionManager<SqliteConnection>>;
+pub type DbConnection = PooledConnection<ConnectionManager<SqliteConnection>>;
+
+pub fn establish_connection(database_url: &str) -> Result<DbPool, Error> {
+    let manager = ConnectionManager::<SqliteConnection>::new(database_url);
+    
+    Pool::builder()
+        .max_size(16)  // Max connections
+        .build(manager)
+        .map_err(|e| Error::Database(e.to_string()))
+}
+
+pub fn run_migrations(conn: &mut SqliteConnection) -> Result<(), Error> {
+    // Run Diesel migrations
+    diesel_migrations::run_pending_migrations(conn)
+        .map_err(|e| Error::Database(e.to_string()))?;
+    
+    // Create indexes
+    create_indexes(conn)?;
+    
+    Ok(())
+}
+
+fn create_indexes(conn: &mut SqliteConnection) -> Result<(), Error> {
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_games_white ON Games(WhiteID)")?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_games_black ON Games(BlackID)")?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_games_date ON Games(Date)")?;
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_games_eco ON Games(ECO)")?;
+    
+    Ok(())
+}
+```
+
+### Diesel Models
+
+```rust
+// db/models.rs
+use diesel::prelude::*;
+use serde::{Serialize, Deserialize};
+
+#[derive(Queryable, Serialize, Deserialize)]
+#[diesel(table_name = games)]
+pub struct Game {
+    pub id: i32,
+    pub event_id: i32,
+    pub site_id: i32,
+    pub date: Option<String>,
+    pub white_id: i32,
+    pub white_elo: Option<i32>,
+    pub black_id: i32,
+    pub black_elo: Option<i32>,
+    pub result: Option<String>,
+    pub eco: Option<String>,
+    pub moves: Vec<u8>,  // Encoded moves
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = games)]
+pub struct NewGame {
+    pub event_id: i32,
+    pub white_id: i32,
+    pub black_id: i32,
+    pub moves: Vec<u8>,
+    // ... other fields
+}
+
+#[derive(Queryable, Serialize)]
+#[diesel(table_name = players)]
+pub struct Player {
+    pub id: i32,
+    pub name: Option<String>,
+    pub elo: Option<i32>,
+}
+```
+
+### Database Operations
+
+```rust
+// db/ops.rs
+use diesel::prelude::*;
+use crate::db::{models::*, schema::*};
+
+pub fn insert_game(game: &NewGame, conn: &mut SqliteConnection) -> Result<i32, Error> {
+    diesel::insert_into(games::table)
+        .values(game)
+        .execute(conn)?;
+    
+    let game_id = diesel::select(diesel::dsl::last_insert_rowid())
+        .first::<i64>(conn)? as i32;
+    
+    Ok(game_id)
+}
+
+pub fn search_games(
+    filters: &GameFilters,
+    conn: &mut SqliteConnection,
+) -> Result<Vec<Game>, Error> {
+    let mut query = games::table.into_boxed();
+    
+    // Apply filters
+    if let Some(player) = &filters.player {
+        query = query.filter(
+            games::white_id.eq_any(
+                players::table
+                    .filter(players::name.like(format!("%{}%", player)))
+                    .select(players::id)
+            ).or(
+                games::black_id.eq_any(
+                    players::table
+                        .filter(players::name.like(format!("%{}%", player)))
+                        .select(players::id)
+                )
+            )
+        );
+    }
+    
+    if let Some(min_elo) = filters.min_elo {
+        query = query.filter(
+            games::white_elo.ge(min_elo)
+                .or(games::black_elo.ge(min_elo))
+        );
+    }
+    
+    if let Some(eco) = &filters.eco {
+        query = query.filter(games::eco.like(format!("{}%", eco)));
+    }
+    
+    query
+        .limit(filters.limit.unwrap_or(100))
+        .load::<Game>(conn)
+        .map_err(Error::from)
+}
+```
+
+See [Database Architecture](/development/architecture/database) for detailed schema information.
+
+## PGN Processing
+
+### High-Performance Parsing
+
+```rust
+// pgn.rs
+use pgn_reader::{Visitor, BufferedReader, Skip};
+use rayon::prelude::*;
+
+pub fn import_pgn_file(path: &Path, conn: &mut SqliteConnection) -> Result<usize, Error> {
+    let file = File::open(path)?;
+    let mut reader = BufferedReader::new(file);
+    
+    let mut games = Vec::new();
+    let mut visitor = GameVisitor::new();
+    
+    // Parse games
+    while reader.read_game(&mut visitor)? {
+        games.push(visitor.take_game());
+    }
+    
+    // Parallel processing
+    let processed: Vec<_> = games
+        .par_iter()
+        .map(|game| process_game(game))
+        .collect::<Result<Vec<_>, _>>()?;
+    
+    // Bulk insert
+    db::bulk_insert::insert_games(&processed, conn)?;
+    
+    Ok(processed.len())
+}
+
+struct GameVisitor {
+    headers: HashMap<String, String>,
+    moves: Vec<String>,
+}
+
+impl Visitor for GameVisitor {
+    type Result = ();
+    
+    fn header(&mut self, key: &[u8], value: &[u8]) {
+        self.headers.insert(
+            String::from_utf8_lossy(key).into(),
+            String::from_utf8_lossy(value).into(),
+        );
+    }
+    
+    fn san(&mut self, san: &[u8]) {
+        self.moves.push(String::from_utf8_lossy(san).into());
+    }
+    
+    fn end_game(&mut self) -> Self::Result {
+        // Game complete
+    }
+}
+```
+
+## Error Handling
+
+### Custom Error Type
+
+```rust
+// error.rs
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum Error {
+    #[error("Database error: {0}")]
+    Database(String),
+    
+    #[error("File system error: {0}")]
+    FileSystem(#[from] std::io::Error),
+    
+    #[error("Parse error: {0}")]
+    Parse(String),
+    
+    #[error("Engine error: {0}")]
+    Engine(String),
+    
+    #[error("Network error: {0}")]
+    Network(#[from] reqwest::Error),
+    
+    #[error("Invalid FEN: {0}")]
+    InvalidFen(String),
+}
+
+impl serde::Serialize for Error {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+```
+
+## Performance Optimizations
+
+<CardGroup cols={2}>
+  <Card title="Parallel Processing" icon="microchip">
+    Use Rayon for data parallelism:
+    ```rust
+    use rayon::prelude::*;
+    
+    let results: Vec<_> = games
+        .par_iter()
+        .map(|game| analyze_game(game))
+        .collect();
+    ```
+  </Card>
+  
+  <Card title="Connection Pooling" icon="database">
+    r2d2 pools database connections:
+    ```rust
+    let pool = Pool::builder()
+        .max_size(16)
+        .build(manager)?;
+    ```
+  </Card>
+  
+  <Card title="Move Encoding" icon="compress">
+    Compress moves to 8 bytes each:
+    ```rust
+    // Instead of storing "e4" as string
+    // Store as u64: from_square | to_square | promotion
+    ```
+  </Card>
+  
+  <Card title="Caching" icon="memory">
+    Cache frequent queries:
+    ```rust
+    use dashmap::DashMap;
+    
+    lazy_static! {
+        static ref POSITION_CACHE: DashMap<String, Vec<Game>> = DashMap::new();
+    }
+    ```
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Schema" href="/development/architecture/database" icon="database">
+    Explore database design
+  </Card>
+  
+  <Card title="Frontend Architecture" href="/development/architecture/frontend" icon="react">
+    Learn about the React frontend
+  </Card>
+</CardGroup>

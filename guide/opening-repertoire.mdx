@@ -1,0 +1,456 @@
+---
+title: Opening Repertoire
+description: Build, practice, and maintain your chess opening repertoire with spaced repetition training
+---
+
+Obsidian Chess Studio helps you build and maintain a solid opening repertoire using spaced repetition, ensuring you remember your prepared lines when it matters most.
+
+## What is a Repertoire?
+
+A chess opening repertoire is a set of prepared opening variations you play consistently:
+
+- **As White**: Your chosen first moves and responses to Black's defenses
+- **As Black**: Your prepared defenses against 1.e4, 1.d4, and other White openings
+
+**Benefits:**
+- Reach familiar positions with confidence
+- Spend less time thinking in the opening
+- Understand typical plans and ideas
+- Avoid early mistakes and traps
+
+## Creating Your Repertoire
+
+<Steps>
+  <Step title="Open a New File">
+    Create a new PGN file for your repertoire (e.g., "My_Repertoire.pgn").
+  </Step>
+  
+  <Step title="Build Your Lines">
+    For each opening you want to play:
+    
+    <Tabs>
+      <Tab title="Start from Scratch">
+        1. Set up the starting position
+        2. Play the main line moves
+        3. Add variations for opponent's alternatives
+        4. Annotate key moves with comments
+      </Tab>
+      
+      <Tab title="Import from Games">
+        1. Find master games in your opening
+        2. Copy the moves you want to play
+        3. Merge into your repertoire file
+        4. Add personal annotations
+      </Tab>
+      
+      <Tab title="Use Opening Explorer">
+        1. Navigate to a position
+        2. Use position search to find master games
+        3. Review popular moves and success rates
+        4. Add promising lines to your repertoire
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Organize by Color">
+    Create separate sections or files:
+    - **White Repertoire**: Your openings as White
+    - **Black vs e4**: Defenses against 1.e4
+    - **Black vs d4**: Defenses against 1.d4
+    - **Black vs Other**: Responses to 1.Nf3, 1.c4, etc.
+  </Step>
+  
+  <Step title="Add Annotations">
+    For each critical position, add:
+    - Plans and ideas
+    - Typical pawn breaks
+    - Piece placement guidelines
+    - Common traps to avoid
+  </Step>
+</Steps>
+
+## Spaced Repetition Training
+
+The key to a reliable repertoire is regular practice using spaced repetition.
+
+### How It Works
+
+1. **Extract Positions**: The app identifies critical positions in your repertoire
+2. **Create Flash Cards**: Each position becomes a training card
+3. **Scheduled Reviews**: Cards are shown based on how well you know them:
+   - **New**: Never practiced
+   - **Learning**: Recently practiced
+   - **Review**: Due for reinforcement
+   - **Mastered**: Well-known, infrequent reviews
+
+### Starting Repertoire Training
+
+<Steps>
+  <Step title="Open Your Repertoire File">
+    Load your PGN repertoire file into the analysis board.
+  </Step>
+  
+  <Step title="Enter Practice Mode">
+    Click the **Practice** tab or button to enter repertoire training mode.
+  </Step>
+  
+  <Step title="Select Color">
+    Choose which side you're practicing:
+    - **White**: Practice your White openings
+    - **Black**: Practice your Black defenses
+  </Step>
+  
+  <Step title="Generate Cards">
+    Click **Build from Tree** to extract positions from your repertoire.
+    
+    The app will:
+    - Identify positions where you need to make a move
+    - Create a card for each critical position
+    - Exclude positions where the opponent moves
+  </Step>
+  
+  <Step title="Start Training">
+    Click **Start Practice** to begin reviewing positions.
+  </Step>
+</Steps>
+
+### Practicing Positions
+
+During practice:
+
+<Steps>
+  <Step title="Position Shown">
+    A position from your repertoire appears on the board.
+  </Step>
+  
+  <Step title="Recall the Move">
+    Think about what move your repertoire recommends.
+  </Step>
+  
+  <Step title="Make Your Move">
+    Play the move on the board.
+  </Step>
+  
+  <Step title="Immediate Feedback">
+    - **Correct**: Green highlight, move to next position
+    - **Incorrect**: Red highlight, correct move is shown
+  </Step>
+  
+  <Step title="Rate Your Recall">
+    After seeing the answer, rate how well you remembered:
+    - **Again**: Didn't remember, see soon
+    - **Hard**: Struggled to remember
+    - **Good**: Remembered correctly
+    - **Easy**: Remembered instantly
+  </Step>
+</Steps>
+
+<Note>
+  The FSRS (Free Spaced Repetition Scheduler) algorithm adjusts review intervals based on your ratings. Cards you rate "Easy" won't appear for days or weeks, while "Again" cards come back in the same session.
+</Note>
+
+## Practice Statistics
+
+Track your repertoire knowledge:
+
+<CardGroup cols={2}>
+  <Card title="Unseen Positions" icon="eye-slash">
+    Positions you haven't practiced yet. Gradually work through these.
+  </Card>
+  
+  <Card title="Due for Review" icon="clock">
+    Positions scheduled for review today. Prioritize these to maintain memory.
+  </Card>
+  
+  <Card title="Practiced" icon="check">
+    Positions you've reviewed recently. They'll come up again based on your performance.
+  </Card>
+  
+  <Card title="Mastered" icon="star">
+    Positions you know well. These are reviewed infrequently to maintain long-term retention.
+  </Card>
+</CardGroup>
+
+### Next Review Date
+
+The app shows when your next review is due. Daily practice is recommended, but the system adapts to your schedule.
+
+## Building a Complete Repertoire
+
+### White Repertoire Structure
+
+<Tabs>
+  <Tab title="Main Line">
+    Your primary first move and plan:
+    
+    ```
+    Example: 1.e4 repertoire
+    - vs 1...e5: Italian Game
+    - vs 1...c5: Open Sicilian (Najdorf, Dragon)
+    - vs 1...e6: French Advance
+    - vs 1...c6: Caro-Kann Classical
+    ```
+  </Tab>
+  
+  <Tab title="Sidelines">
+    Responses to less common defenses:
+    
+    ```
+    - vs 1...d6: King's Indian Attack setup
+    - vs 1...Nf6: Transpositional options
+    - vs 1...g6: Maroczy structure
+    ```
+  </Tab>
+  
+  <Tab title="Depth">
+    How deep to prepare:
+    - **Main lines**: 15-20 moves
+    - **Critical variations**: 12-15 moves
+    - **Sidelines**: 8-10 moves
+    - **Rare lines**: 6-8 moves
+  </Tab>
+</Tabs>
+
+### Black Repertoire Structure
+
+<Tabs>
+  <Tab title="vs 1.e4">
+    Choose a main defense:
+    
+    ```
+    Options:
+    - Sicilian (Najdorf, Dragon, Sveshnikov)
+    - French Defense
+    - Caro-Kann
+    - Scandinavian
+    - Alekhine Defense
+    - Pirc/Modern
+    ```
+  </Tab>
+  
+  <Tab title="vs 1.d4">
+    Choose your setup:
+    
+    ```
+    Options:
+    - King's Indian Defense
+    - Nimzo-Indian
+    - Queen's Gambit Declined
+    - Grünfeld Defense
+    - Slav/Semi-Slav
+    - Dutch Defense
+    ```
+  </Tab>
+  
+  <Tab title="vs 1.c4, 1.Nf3, etc.">
+    Prepare for sidelines:
+    
+    ```
+    - vs 1.Nf3: Transpose or play ...d5/...Nf6
+    - vs 1.c4: English Defense or transpose
+    - vs 1.g3: King's Indian setup
+    ```
+  </Tab>
+</Tabs>
+
+## Repertoire Maintenance
+
+### Regular Updates
+
+Your repertoire is a living document:
+
+<Steps>
+  <Step title="Analyze Your Games">
+    After each game, review your opening:
+    - Did you play your repertoire correctly?
+    - Were there any surprises?
+    - Did you face a line you hadn't prepared?
+  </Step>
+  
+  <Step title="Add New Lines">
+    When you encounter a gap:
+    - Research the best response
+    - Add it to your repertoire file
+    - Practice the new line until memorized
+  </Step>
+  
+  <Step title="Prune Weak Lines">
+    If a variation isn't working:
+    - Analyze where it went wrong
+    - Either improve your understanding or switch to a different line
+    - Update your repertoire file
+  </Step>
+  
+  <Step title="Stay Current">
+    Follow opening theory:
+    - Watch master games in your openings
+    - Read opening books and articles
+    - Check for new ideas and improvements
+    - Update your repertoire with improvements
+  </Step>
+</Steps>
+
+### Gap Analysis
+
+Identify holes in your repertoire:
+
+<Steps>
+  <Step title="Review Game History">
+    Go through your games and note:
+    - Openings where you were unprepared
+    - Lines where you deviated from your repertoire
+    - Positions where you felt uncomfortable
+  </Step>
+  
+  <Step title="Create a Coverage Map">
+    List all possible opponent responses:
+    - Mark which lines you've prepared
+    - Highlight gaps (unprepared lines)
+    - Prioritize gaps by how often they occur
+  </Step>
+  
+  <Step title="Fill the Gaps">
+    For each gap:
+    - Research the best responses
+    - Add to your repertoire
+    - Practice until fluent
+  </Step>
+</Steps>
+
+## Advanced Techniques
+
+### Transpositions
+
+Understand move order flexibility:
+
+<Accordion title="Learn Multiple Paths">
+  Many positions can be reached via different move orders:
+  
+  ```
+  Example: English Opening transposing to King's Indian
+  
+  1.c4 Nf6 2.Nc3 g6 3.g3 Bg7 4.Bg2 O-O 5.Nf3 d6 6.O-O
+  
+  vs
+  
+  1.Nf3 Nf6 2.g3 g6 3.Bg2 Bg7 4.O-O O-O 5.c4 d6 6.Nc3
+  ```
+  
+  Both reach similar King's Indian positions. Practice recognizing transpositions.
+</Accordion>
+
+### Theme-Based Organization
+
+Organize by structures rather than strict move orders:
+
+- **Maroczy Bind**: Know the plans regardless of how the position arises
+- **Isolated Queen's Pawn**: Understand the typical play
+- **Carlsbad Structure**: Master the pawn breaks and plans
+
+### Opponent-Specific Preparation
+
+For important games:
+
+<Steps>
+  <Step title="Research Opponent's Games">
+    Use position search to find your opponent's games in your openings.
+  </Step>
+  
+  <Step title="Identify Patterns">
+    What do they typically play against your openings?
+  </Step>
+  
+  <Step title="Prepare Surprises">
+    Find improvements or sidelines they may not expect.
+  </Step>
+  
+  <Step title="Practice the Lines">
+    Use spaced repetition to memorize your preparation before the game.
+  </Step>
+</Steps>
+
+## Repertoire Templates
+
+### Narrow Repertoire (Beginner-Friendly)
+
+**White:**
+- 1.e4 - Play the Italian Game vs everything
+- Focus on understanding one system deeply
+
+**Black:**
+- vs 1.e4: French Defense (one variation)
+- vs 1.d4: King's Indian Defense (simple setup)
+- vs 1.c4/1.Nf3: Transpose to King's Indian
+
+**Advantages:**
+- Easy to learn
+- Familiar positions every game
+- Focus on understanding over memorization
+
+### Broad Repertoire (Advanced)
+
+**White:**
+- Multiple first moves (1.e4, 1.d4, 1.c4) depending on opponent
+- Deep theory in several openings
+- Flexible transpositions
+
+**Black:**
+- Sharp Sicilians vs 1.e4
+- Nimzo/Queen's Indian vs 1.d4
+- Modern structures vs 1.c4
+
+**Advantages:**
+- Flexibility and surprise
+- More tools for different opponents
+- Keeps games interesting
+
+## Best Practices
+
+<Steps>
+  <Step title="Start Small">
+    Begin with narrow repertoire (one or two openings). Expand gradually as you master each opening.
+  </Step>
+  
+  <Step title="Understand, Don't Memorize">
+    Focus on plans and ideas, not just move sequences. This helps when opponents deviate.
+  </Step>
+  
+  <Step title="Daily Practice">
+    Spend 10-15 minutes daily reviewing positions. Consistency beats marathon sessions.
+  </Step>
+  
+  <Step title="Play Your Repertoire">
+    Actually use your prepared lines in games. Theory without practice is useless.
+  </Step>
+  
+  <Step title="Review After Games">
+    Immediately after each game, check your opening performance and update your repertoire if needed.
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### I Keep Forgetting My Lines
+
+- **Increase practice frequency**: Review positions daily
+- **Rate honestly**: If you struggled, rate "Hard" or "Again"
+- **Simplify repertoire**: You may be trying to learn too many lines
+- **Understand, don't memorize**: Focus on why moves are played
+
+### Too Many Positions to Review
+
+- **Reduce repertoire scope**: Cut unnecessary sidelines
+- **Focus on critical positions**: Not every position needs memorization
+- **Batch practice**: Do longer sessions 2-3 times per week instead of daily
+
+### Opponents Play Lines I Haven't Prepared
+
+- **Expand repertoire**: Add the lines you're facing regularly
+- **General principles**: Study typical plans for your opening structures
+- **Database analysis**: Use position search to find how masters handled these lines
+
+### Positions Not Extracting Correctly
+
+- **Check variation structure**: Ensure your repertoire file has proper PGN variations
+- **Manual card creation**: Add positions manually if auto-extraction fails
+- **File format**: Verify your PGN is valid and properly formatted

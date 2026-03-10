@@ -1,0 +1,669 @@
+---
+title: Testing Guide
+description: Running tests, test coverage, and writing new tests for Obsidian Chess Studio
+---
+
+## Testing Overview
+
+Obsidian Chess Studio maintains comprehensive test coverage across both frontend (React/TypeScript) and backend (Rust) to ensure reliability and prevent regressions.
+
+## Test Statistics
+
+<CardGroup cols={2}>
+  <Card title="Frontend Tests" icon="react">
+    - **173 test files**
+    - **307 passing tests**
+    - **Vitest** with v8 coverage
+    - **~22% coverage** (growing)
+  </Card>
+  
+  <Card title="Backend Tests" icon="rust">
+    - **234 passing tests**
+    - **Cargo** test framework
+    - **Comprehensive coverage**
+    - **3.44s execution time**
+  </Card>
+</CardGroup>
+
+## Running Tests
+
+### Frontend Tests
+
+<Tabs>
+  <Tab title="Quick Run">
+    ```bash
+    # Run all tests once
+    pnpm test
+    ```
+    
+    This runs all frontend tests using Vitest.
+  </Tab>
+  
+  <Tab title="Watch Mode">
+    ```bash
+    # Run tests in watch mode (re-runs on file changes)
+    pnpm vitest
+    ```
+    
+    Useful during development - tests automatically re-run when you save files.
+  </Tab>
+  
+  <Tab title="Coverage Report">
+    ```bash
+    # Run tests with coverage
+    pnpm vitest run --coverage
+    ```
+    
+    Generates coverage reports in:
+    - **Terminal:** Summary view
+    - **HTML:** `coverage/index.html` (open in browser)
+    - **LCOV:** `coverage/lcov.info` (for CI tools)
+    - **JSON:** `coverage/coverage-summary.json`
+  </Tab>
+  
+  <Tab title="Specific Tests">
+    ```bash
+    # Run tests matching a pattern
+    pnpm vitest BoardGame
+    
+    # Run specific test file
+    pnpm vitest src/features/boards/__tests__/BoardGame.test.tsx
+    
+    # Run tests in specific directory
+    pnpm vitest src/features/profiles
+    ```
+  </Tab>
+</Tabs>
+
+### Backend Tests
+
+<Tabs>
+  <Tab title="All Tests">
+    ```bash
+    cd src-tauri
+    
+    # Run all tests
+    cargo test
+    ```
+    
+    Runs all 234 Rust tests (completes in ~3.4 seconds).
+  </Tab>
+  
+  <Tab title="Specific Module">
+    ```bash
+    # Test specific module
+    cargo test db::player_stats::tests
+    
+    # Test specific function
+    cargo test test_position_search
+    
+    # Test with pattern matching
+    cargo test puzzle
+    ```
+  </Tab>
+  
+  <Tab title="With Output">
+    ```bash
+    # Show println! output
+    cargo test -- --nocapture
+    
+    # Show output for specific test
+    cargo test test_name -- --nocapture
+    ```
+    
+    Useful for debugging test failures.
+  </Tab>
+  
+  <Tab title="Ignored Tests">
+    ```bash
+    # Run ignored tests (stress tests, benchmarks)
+    cargo test -- --ignored
+    
+    # Run all tests including ignored
+    cargo test -- --include-ignored
+    ```
+    
+    <Note>
+      Stress tests are ignored by default as they're performance benchmarks.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Frontend Test Coverage
+
+Current frontend coverage metrics:
+
+| Metric | Coverage | Target |
+|--------|----------|--------|
+| **Statements** | 21.06% | 60%+ |
+| **Branches** | 15.88% | 50%+ |
+| **Functions** | 17.97% | 60%+ |
+| **Lines** | 22.03% | 60%+ |
+
+### Well-Tested Areas
+
+<AccordionGroup>
+  <Accordion title="Profile Components (92.59%)">
+    Excellent coverage for profile-related components:
+    - `PersonalCard.tsx` - Player profile cards
+    - `ProfileAccountSelector.tsx` - Account selection
+    - `ProfilePanel.tsx` - Profile management
+    - `ProfileSelector.tsx` - Profile switching
+    
+    **Example test:**
+    ```typescript
+    describe('ProfileAccountSelector', () => {
+      it('displays connected accounts', () => {
+        render(<ProfileAccountSelector />);
+        expect(screen.getByText('Lichess')).toBeInTheDocument();
+      });
+    });
+    ```
+  </Accordion>
+  
+  <Accordion title="Chess Utilities (96.63%)">
+    Comprehensive coverage for chess engine utilities:
+    - Engine configuration
+    - UCI command parsing
+    - Engine path resolution
+    - Process management
+    
+    **Location:** `src/utils/engines/__tests__/`
+  </Accordion>
+  
+  <Accordion title="Utility Functions (87.5%)">
+    High coverage for helper utilities:
+    - i18n configuration
+    - Formatters (dates, chess notation, scores)
+    - Environment detection
+    - Chess position utilities
+    
+    **Location:** `src/utils/__tests__/`
+  </Accordion>
+</AccordionGroup>
+
+### Areas Needing Coverage
+
+<Warning>
+  The following areas have lower coverage and need more tests:
+  - File utilities and opening management
+  - State management stores (tree, database views)
+  - Some utility modules (tabs, storage, logger)
+  - Complex UI components
+</Warning>
+
+## Backend Test Coverage
+
+### Well-Tested Modules
+
+<Tabs>
+  <Tab title="Database Operations">
+    **Comprehensive coverage for:**
+    - Player statistics queries
+    - Game filtering and search
+    - Position caching
+    - Bulk insert operations
+    - Online sync state
+    
+    **Example:**
+    ```rust
+    #[test]
+    fn test_player_stats_calculation() {
+        let stats = calculate_player_stats(player_id, &conn).unwrap();
+        assert_eq!(stats.total_games, 150);
+        assert!(stats.win_rate > 0.5);
+    }
+    ```
+    
+    **Location:** `src-tauri/src/db/*/tests`
+  </Tab>
+  
+  <Tab title="Position Search">
+    **Tests cover:**
+    - Exact position matching
+    - Partial position search
+    - FEN parsing and validation
+    - Board hashing algorithms
+    - Material signatures
+    
+    **Example:**
+    ```rust
+    #[test]
+    fn test_exact_position_search() {
+        let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        let results = search_exact_position(fen, &conn).unwrap();
+        assert!(!results.is_empty());
+    }
+    ```
+    
+    **Location:** `src-tauri/src/db/search.rs`
+  </Tab>
+  
+  <Tab title="PGN Processing">
+    **Tests cover:**
+    - PGN parsing (valid and invalid)
+    - Game reading and writing
+    - Move encoding/decoding
+    - Offset management
+    - Batch imports
+    
+    **Example:**
+    ```rust
+    #[test]
+    fn test_pgn_parsing() {
+        let pgn = "[Event \"Test\"]\n1. e4 e5 2. Nf3 Nc6 *";
+        let game = parse_pgn(pgn).unwrap();
+        assert_eq!(game.headers.event, "Test");
+        assert_eq!(game.moves.len(), 4);
+    }
+    ```
+    
+    **Location:** `src-tauri/src/pgn.rs`
+  </Tab>
+  
+  <Tab title="Pawn Structures">
+    **Tests cover:**
+    - Structure identification
+    - Signature generation
+    - Island counting
+    - Isolated/doubled pawn detection
+    - Filtering by structure
+    
+    **Example:**
+    ```rust
+    #[test]
+    fn test_pawn_structure_detection() {
+        let position = create_test_position();
+        let structure = extract_pawn_structure(&position);
+        assert_eq!(structure.islands, 2);
+        assert_eq!(structure.isolated_pawns, 1);
+    }
+    ```
+    
+    **Location:** `src-tauri/src/pawn_structures.rs`
+  </Tab>
+  
+  <Tab title="Puzzle System">
+    **Tests cover:**
+    - Puzzle retrieval and filtering
+    - Rating calculation
+    - Theme-based search
+    - Cache validation
+    - Difficulty adjustment
+    
+    **Location:** `src-tauri/src/puzzle.rs`
+  </Tab>
+</Tabs>
+
+## Writing Frontend Tests
+
+### Test Structure
+
+Frontend tests use **Vitest** with **React Testing Library**.
+
+<Steps>
+  <Step title="Create Test File">
+    Add tests alongside the component:
+    ```
+    features/boards/
+    ├── components/
+    │   └── BoardGame.tsx
+    └── __tests__/
+        └── BoardGame.test.tsx
+    ```
+  </Step>
+  
+  <Step title="Write Test">
+    ```typescript
+    import { render, screen, fireEvent } from '@testing-library/react';
+    import { describe, it, expect, vi } from 'vitest';
+    import { BoardGame } from '../components/BoardGame';
+    
+    describe('BoardGame', () => {
+      it('renders chess board', () => {
+        render(<BoardGame />);
+        const board = screen.getByRole('main');
+        expect(board).toBeInTheDocument();
+      });
+      
+      it('handles move click', async () => {
+        const onMove = vi.fn();
+        render(<BoardGame onMove={onMove} />);
+        
+        const square = screen.getByTestId('square-e2');
+        fireEvent.click(square);
+        
+        expect(onMove).toHaveBeenCalled();
+      });
+    });
+    ```
+  </Step>
+  
+  <Step title="Run Test">
+    ```bash
+    pnpm vitest BoardGame
+    ```
+  </Step>
+</Steps>
+
+### Testing Patterns
+
+<Tabs>
+  <Tab title="Component Testing">
+    ```typescript
+    import { render, screen } from '@testing-library/react';
+    import userEvent from '@testing-library/user-event';
+    
+    describe('MyComponent', () => {
+      it('renders correctly', () => {
+        render(<MyComponent />);
+        expect(screen.getByText('Expected Text')).toBeInTheDocument();
+      });
+      
+      it('handles user interaction', async () => {
+        const user = userEvent.setup();
+        render(<MyComponent />);
+        
+        await user.click(screen.getByRole('button'));
+        expect(screen.getByText('Clicked')).toBeInTheDocument();
+      });
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Mocking Tauri Commands">
+    ```typescript
+    import { vi } from 'vitest';
+    
+    // Mock Tauri invoke
+    vi.mock('@tauri-apps/api/core', () => ({
+      invoke: vi.fn((command, args) => {
+        if (command === 'get_games') {
+          return Promise.resolve([{ id: 1, moves: 'e4 e5' }]);
+        }
+        return Promise.resolve(null);
+      }),
+    }));
+    
+    it('fetches games from backend', async () => {
+      render(<GameList />);
+      await waitFor(() => {
+        expect(screen.getByText('e4 e5')).toBeInTheDocument();
+      });
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Testing Hooks">
+    ```typescript
+    import { renderHook, waitFor } from '@testing-library/react';
+    import { useEngines } from '../hooks/useEngines';
+    
+    it('loads engines', async () => {
+      const { result } = renderHook(() => useEngines());
+      
+      await waitFor(() => {
+        expect(result.current.engines).toHaveLength(2);
+      });
+    });
+    ```
+  </Tab>
+  
+  <Tab title="Testing State">
+    ```typescript
+    import { Provider } from 'jotai';
+    import { useAtom } from 'jotai';
+    
+    it('updates atom state', () => {
+      const TestComponent = () => {
+        const [tabs, setTabs] = useAtom(tabsAtom);
+        return (
+          <button onClick={() => setTabs([...tabs, newTab])}>
+            Add Tab
+          </button>
+        );
+      };
+      
+      render(
+        <Provider>
+          <TestComponent />
+        </Provider>
+      );
+      
+      fireEvent.click(screen.getByRole('button'));
+      // Assert state change
+    });
+    ```
+  </Tab>
+</Tabs>
+
+## Writing Backend Tests
+
+### Test Structure
+
+Rust tests are typically in the same file as the code:
+
+```rust
+// src-tauri/src/db/search.rs
+
+pub fn search_position(fen: &str) -> Result<Vec<Game>> {
+    // Implementation
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_search_position() {
+        let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        let result = search_position(fen);
+        assert!(result.is_ok());
+    }
+}
+```
+
+### Testing Patterns
+
+<Tabs>
+  <Tab title="Unit Tests">
+    ```rust
+    #[test]
+    fn test_move_encoding() {
+        let san_move = "e4";
+        let encoded = encode_move(san_move).unwrap();
+        let decoded = decode_move(encoded).unwrap();
+        assert_eq!(decoded, san_move);
+    }
+    
+    #[test]
+    fn test_fen_parsing() {
+        let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        let position = parse_fen(fen).unwrap();
+        assert_eq!(position.turn(), Color::White);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Database Tests">
+    ```rust
+    #[test]
+    fn test_game_insertion() {
+        let conn = establish_test_connection();
+        
+        let game = Game {
+            white: "Player1".to_string(),
+            black: "Player2".to_string(),
+            moves: vec!["e4", "e5"],
+            // ...
+        };
+        
+        let result = insert_game(&game, &conn);
+        assert!(result.is_ok());
+        
+        // Cleanup
+        cleanup_test_db(&conn);
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Error Handling">
+    ```rust
+    #[test]
+    fn test_invalid_fen_returns_error() {
+        let invalid_fen = "invalid fen string";
+        let result = parse_fen(invalid_fen);
+        assert!(result.is_err());
+        
+        match result.unwrap_err() {
+            Error::Parse(msg) => {
+                assert!(msg.contains("Invalid FEN"));
+            }
+            _ => panic!("Expected Parse error"),
+        }
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Async Tests">
+    ```rust
+    #[tokio::test]
+    async fn test_async_operation() {
+        let result = fetch_lichess_games("username").await;
+        assert!(result.is_ok());
+        assert!(!result.unwrap().is_empty());
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Test Helpers
+
+```rust
+// Common test utilities
+#[cfg(test)]
+mod test_helpers {
+    use super::*;
+    
+    pub fn establish_test_connection() -> Connection {
+        let conn = Connection::open_in_memory().unwrap();
+        run_migrations(&conn);
+        conn
+    }
+    
+    pub fn create_test_game() -> Game {
+        Game {
+            id: 1,
+            white: "TestPlayer1".to_string(),
+            black: "TestPlayer2".to_string(),
+            moves: vec!["e4", "e5", "Nf3", "Nc6"],
+            result: "1-0".to_string(),
+        }
+    }
+}
+```
+
+## Continuous Integration
+
+### GitHub Actions
+
+Tests run automatically on:
+- **Every commit** to any branch
+- **Pull requests** before merge
+- **Pre-release** builds
+
+**Workflow:** `.github/workflows/test.yml`
+
+```yaml
+name: Test
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Frontend tests
+        run: pnpm test
+      - name: Backend tests
+        run: cd src-tauri && cargo test
+```
+
+## Coverage Goals
+
+<Note>
+  Our goal is to increase coverage to:
+  - **Frontend:** 60%+ statement coverage
+  - **Backend:** Maintain 90%+ coverage
+  
+  All new features should include tests.
+</Note>
+
+### Viewing Coverage
+
+<Tabs>
+  <Tab title="Terminal">
+    ```bash
+    pnpm vitest run --coverage
+    ```
+    
+    Shows summary in terminal output.
+  </Tab>
+  
+  <Tab title="HTML Report">
+    ```bash
+    pnpm vitest run --coverage
+    open coverage/index.html
+    ```
+    
+    Interactive HTML report showing:
+    - Coverage by file
+    - Line-by-line coverage
+    - Uncovered branches
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Write Tests First" icon="pen-to-square">
+    Consider TDD (Test-Driven Development):
+    1. Write failing test
+    2. Implement feature
+    3. Test passes
+  </Card>
+  
+  <Card title="Test Edge Cases" icon="triangle-exclamation">
+    Don't just test happy paths:
+    - Empty inputs
+    - Invalid data
+    - Boundary conditions
+    - Error cases
+  </Card>
+  
+  <Card title="Keep Tests Simple" icon="list-check">
+    - One assertion per test (when possible)
+    - Clear test names
+    - Minimal setup
+    - No complex logic in tests
+  </Card>
+  
+  <Card title="Mock External Dependencies" icon="plug">
+    - Mock Tauri commands
+    - Mock external APIs
+    - Use in-memory databases
+    - Avoid network calls
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Contributing" href="/development/contributing" icon="code-pull-request">
+    Submit your code with tests
+  </Card>
+  
+  <Card title="Architecture" href="/development/architecture/frontend" icon="diagram-project">
+    Understand what to test
+  </Card>
+</CardGroup>

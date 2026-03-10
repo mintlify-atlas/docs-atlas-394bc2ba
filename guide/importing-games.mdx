@@ -1,0 +1,357 @@
+---
+title: Importing Games
+description: Import games from PGN files, online platforms, and tournaments into your chess databases
+---
+
+Obsidian Chess Studio offers multiple ways to import games: from PGN files, automatic syncing from Lichess and Chess.com, and importing over-the-board tournament games.
+
+## Importing from PGN Files
+
+PGN (Portable Game Notation) is the standard format for chess games. You can import PGN files into databases or profiles.
+
+### Import to Database
+
+<Steps>
+  <Step title="Navigate to Databases">
+    Go to the Databases page from the main menu.
+  </Step>
+  
+  <Step title="Create or Select Database">
+    Either create a new database or select an existing one to import games into.
+  </Step>
+  
+  <Step title="Click Import">
+    Click the **Import** button (upload icon) in the header.
+  </Step>
+  
+  <Step title="Select Files">
+    Choose one or more PGN files from your computer. Multiple file selection is supported.
+  </Step>
+  
+  <Step title="Configure Import">
+    The import will automatically:
+    - Parse all games in the selected files
+    - Extract player names, ratings, dates, and moves
+    - Store games in the database
+    - Update indexes for fast searching
+  </Step>
+</Steps>
+
+### Import to Profile
+
+<Steps>
+  <Step title="Open Import Modal">
+    From the Databases page, click the **Import Games** button.
+  </Step>
+  
+  <Step title="Select Profile">
+    Choose the profile where games should be imported. This defaults to your active profile.
+  </Step>
+  
+  <Step title="Choose PGN Files">
+    Click **Click to select multiple PGN** and select one or more PGN files.
+  </Step>
+  
+  <Step title="Set Source Player Name">
+    Enter the player name to identify which games belong to this profile:
+    - Used to filter games where you are White or Black
+    - Defaults to the profile name
+    - Important for accurate statistics
+  </Step>
+  
+  <Step title="Optional: Link to Event">
+    Toggle "Event" if these games are from a specific tournament or league:
+    
+    **Use Existing Event:**
+    - Select from previously created events
+    
+    **Create New Event:**
+    - Enter event name (e.g., "Club Championship 2024")
+    - Select event type:
+      - **OTB Tournament**: Over-the-board tournament
+      - **Online Tournament**: Online competition
+      - **League**: Team or individual league
+  </Step>
+  
+  <Step title="Import">
+    Click **Import** to process the files. You'll see progress for each file being imported.
+  </Step>
+</Steps>
+
+<Note>
+  Importing large PGN files (thousands of games) may take a few moments. Progress is displayed during the import.
+</Note>
+
+## Automatic Syncing from Online Platforms
+
+### Lichess Integration
+
+Lichess offers robust API access for downloading your game history.
+
+<Tabs>
+  <Tab title="Public Access">
+    **Without OAuth Login:**
+    
+    1. Add your Lichess account to a profile (see [Profiles](/guide/profiles))
+    2. The app will:
+       - Use the Lichess API to fetch your games
+       - Download games in batches (newest first)
+       - Import into your profile database
+    
+    **Limitations:**
+    - Only public games are accessible
+    - Slightly slower download speeds
+  </Tab>
+  
+  <Tab title="OAuth Login">
+    **With Browser Login (Recommended):**
+    
+    1. When adding a Lichess account, check "Login with browser"
+    2. Authenticate via OAuth in your browser
+    3. The app receives an access token
+    
+    **Benefits:**
+    - Access to all games (including private)
+    - Faster bulk download endpoints
+    - Better rate limits
+    - Access to puzzle history
+    
+    <Note>
+      The OAuth token is stored securely and can be revoked from your Lichess account settings at any time.
+    </Note>
+  </Tab>
+</Tabs>
+
+### Chess.com Integration
+
+Chess.com provides a Public API for accessing your games.
+
+<Steps>
+  <Step title="Link Account">
+    Add your Chess.com account to a profile (username only required).
+  </Step>
+  
+  <Step title="Automatic Archive Download">
+    The app will:
+    - Fetch your player statistics (ratings, game counts)
+    - Download monthly game archives
+    - Parse each game and import to your profile
+  </Step>
+  
+  <Step title="Respect Rate Limits">
+    Chess.com has strict rate limits:
+    - The app enforces a 1.2-second delay between requests
+    - Progress is shown during download
+    - Cooldown periods are displayed if rate limited
+  </Step>
+</Steps>
+
+<Warning>
+  **Chess.com API Limitations:**
+  - Bot games are excluded from public archives
+  - Large accounts may take 10-30 minutes to fully sync initially
+  - The app will retry automatically if errors occur
+</Warning>
+
+## Importing Over-the-Board (OTB) Games
+
+For tournament games that aren't on Lichess or Chess.com:
+
+### From Tournament Organizers
+
+1. Download the PGN file from the tournament website
+2. Use the **Import Games** feature
+3. Link to a new or existing event
+4. Set your player name to filter your games
+
+### From Chess-Results or FIDE
+
+<Steps>
+  <Step title="Export PGN">
+    Most tournament sites (Chess-Results, FIDE, local federations) offer PGN export.
+  </Step>
+  
+  <Step title="Import to Profile">
+    Use the Import Games modal and select your profile.
+  </Step>
+  
+  <Step title="Create Event">
+    Create a new event with:
+    - Tournament name
+    - Event type: OTB Tournament
+  </Step>
+  
+  <Step title="Filter Your Games">
+    The app will identify your games based on the source player name you provided.
+  </Step>
+</Steps>
+
+### Manual Entry
+
+For games you played that weren't recorded:
+
+1. Create a new analysis board
+2. Enter the moves manually or set up the position
+3. Fill in game headers:
+   ```pgn
+   [Event "Club Game"]
+   [Site "Local Chess Club"]
+   [Date "2024.03.10"]
+   [White "Your Name"]
+   [Black "Opponent Name"]
+   [Result "1-0"]
+   ```
+4. Save the PGN file
+5. Import to your profile
+
+## Importing Online Tournament Games
+
+Obsidian Chess Studio has a special flow for importing entire online tournaments:
+
+<Steps>
+  <Step title="Click Online Tournament">
+    From the Databases page, click **Add Online Tournament**.
+  </Step>
+  
+  <Step title="Select Platform and Tournament">
+    - Choose **Lichess** or **Chess.com**
+    - Enter the tournament ID or URL
+  </Step>
+  
+  <Step title="Create Database">
+    The app will:
+    - Fetch all tournament games
+    - Create a new database named after the tournament
+    - Import all games with full player information
+    - Mark the database source as "online"
+  </Step>
+</Steps>
+
+<Note>
+  Online tournament databases are read-only and linked to their source. They can be merged with your local databases if needed.
+</Note>
+
+## Import Progress and Feedback
+
+### Progress Notifications
+
+During import, you'll see:
+- **Processing Games**: Initial parse and validation
+- **Batch X of Y**: Progress through large PGN files
+- **Optimizing Database**: Post-import indexing
+- **Complete**: Total games imported
+
+### Import Summary
+
+After import completes:
+- Total games imported
+- Duplicates skipped
+- Errors (if any)
+- Database size update
+
+## Advanced Import Options
+
+### Batch Importing Multiple Files
+
+You can select multiple PGN files at once:
+
+```bash
+game1.pgn
+game2.pgn
+tournament_round1.pgn
+tournament_round2.pgn
+```
+
+All files will be processed sequentially, and progress is shown for each file.
+
+### Handling Large PGN Files
+
+For very large PGN files (100,000+ games):
+
+1. The import happens in batches to avoid memory issues
+2. Database is optimized after import for fast querying
+3. Consider splitting extremely large files if import is too slow
+
+### Automatic Deduplication
+
+The app automatically prevents duplicate games using:
+- Player names (White and Black)
+- Game date
+- Site/Event
+- Opening moves
+
+If a game already exists, it will not be imported again.
+
+## Troubleshooting
+
+### PGN Parse Errors
+
+<AccordionGroup>
+  <Accordion title="Invalid PGN Format">
+    **Issue:** PGN file has syntax errors or non-standard tags.
+    
+    **Solution:**
+    - Use a PGN validator tool
+    - Check for missing brackets or quotes
+    - Ensure move numbers are formatted correctly
+  </Accordion>
+  
+  <Accordion title="Encoding Issues">
+    **Issue:** Player names or comments have garbled characters.
+    
+    **Solution:**
+    - Ensure PGN file is UTF-8 encoded
+    - Re-export from source with UTF-8 encoding
+  </Accordion>
+  
+  <Accordion title="Incomplete Games">
+    **Issue:** Some games have no moves or headers.
+    
+    **Solution:**
+    - These games will be skipped
+    - Check the original source file
+    - Manual entry may be required
+  </Accordion>
+</AccordionGroup>
+
+### Online Sync Issues
+
+<AccordionGroup>
+  <Accordion title="Rate Limit Exceeded">
+    **Issue:** Too many requests to Chess.com or Lichess.
+    
+    **Solution:**
+    - The app will automatically wait and retry
+    - For Chess.com: Expect delays, especially for large accounts
+    - For Lichess: Use OAuth login for better limits
+  </Accordion>
+  
+  <Accordion title="Network Timeout">
+    **Issue:** Slow or unstable internet connection.
+    
+    **Solution:**
+    - The app will retry with exponential backoff
+    - Check your connection and wait for retry
+    - Restart sync manually if needed
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Organize by Event" icon="calendar">
+    Use the Event feature to group tournament games together for better organization and analysis.
+  </Card>
+  
+  <Card title="Regular Syncs" icon="refresh">
+    Link your online accounts for automatic syncing rather than manual PGN exports.
+  </Card>
+  
+  <Card title="Backup PGN Files" icon="folder">
+    Keep original PGN files as backups before importing, especially for important tournament games.
+  </Card>
+  
+  <Card title="Verify Player Names" icon="user-check">
+    Ensure player names in PGN match your profile name exactly for accurate statistics.
+  </Card>
+</CardGroup>

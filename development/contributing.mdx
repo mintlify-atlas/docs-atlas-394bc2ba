@@ -1,0 +1,508 @@
+---
+title: Contributing Guidelines
+description: How to contribute code, features, and bug fixes to Obsidian Chess Studio
+---
+
+## Welcome Contributors!
+
+We appreciate contributions of all kinds to Obsidian Chess Studio. Whether you're fixing bugs, adding features, improving documentation, or translating the app, your contributions are valuable.
+
+## Before You Start
+
+<Steps>
+  <Step title="Check Existing Issues">
+    Before starting work, check the [issues page](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues) to see if:
+    - Someone else is already working on it
+    - There's a discussion about the feature/bug
+    - Maintainers have provided guidance
+    
+    If unsure, **open an issue first** to discuss your idea.
+  </Step>
+  
+  <Step title="Read the Documentation">
+    Familiarize yourself with:
+    - [Development Overview](/development/overview)
+    - [Building from Source](/development/building-from-source)
+    - [Project Structure](/development/project-structure)
+    - [Testing Guidelines](/development/testing)
+  </Step>
+  
+  <Step title="Join the Community">
+    - **GitHub Discussions:** Ask questions and share ideas
+    - **Issues:** Report bugs and request features
+    - Stay updated with project direction
+  </Step>
+</Steps>
+
+## Development Workflow
+
+### 1. Fork and Clone
+
+<Steps>
+  <Step title="Fork the Repository">
+    Click the "Fork" button on [GitHub](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio)
+  </Step>
+  
+  <Step title="Clone Your Fork">
+    ```bash
+    git clone git@github.com:{your_username}/Obsidian-Chess-Studio.git
+    cd Obsidian-Chess-Studio
+    ```
+  </Step>
+  
+  <Step title="Add Upstream Remote">
+    ```bash
+    git remote add upstream git@github.com:luisrivasnoriega/Obsidian-Chess-Studio.git
+    ```
+  </Step>
+</Steps>
+
+### 2. Create a Feature Branch
+
+Always create a new branch from `master` for your work:
+
+```bash
+# Update master
+git checkout master
+git pull upstream master
+
+# Create feature branch
+git checkout -b feature/your-feature-name
+# or for bug fixes
+git checkout -b fix/bug-description
+```
+
+**Branch naming conventions:**
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `refactor/` - Code refactoring
+- `docs/` - Documentation changes
+- `test/` - Test additions/fixes
+
+### 3. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 4. Make Your Changes
+
+Now you can start coding! See the sections below for specific guidelines.
+
+## Code Style
+
+### Frontend (TypeScript/React)
+
+<Tabs>
+  <Tab title="Formatting">
+    Use **Biome** for code formatting:
+    
+    ```bash
+    # Format all files
+    pnpm format
+    
+    # Check formatting
+    pnpm biome check ./src
+    ```
+    
+    **Settings:**
+    - Indentation: 2 spaces
+    - Quotes: Double quotes
+    - Semicolons: Required
+    - Trailing commas: ES5
+  </Tab>
+  
+  <Tab title="Linting">
+    Fix linting issues before committing:
+    
+    ```bash
+    # Lint and auto-fix
+    pnpm lint:fix
+    
+    # Check types
+    pnpm lint
+    ```
+    
+    **Rules:**
+    - Strict TypeScript checking
+    - No unused variables
+    - Consistent naming (camelCase)
+    - Prefer `const` over `let`
+  </Tab>
+  
+  <Tab title="React Patterns">
+    **Component structure:**
+    ```typescript
+    // Use named exports
+    export function MyComponent({ prop }: MyComponentProps) {
+      // Hooks at the top
+      const [state, setState] = useState(initialValue);
+      const theme = useMantineTheme();
+      
+      // Event handlers
+      const handleClick = useCallback(() => {
+        // ...
+      }, [dependencies]);
+      
+      // Render
+      return (
+        <div>
+          {/* JSX */}
+        </div>
+      );
+    }
+    ```
+    
+    **Prefer:**
+    - Functional components over class components
+    - `useCallback` for event handlers
+    - `useMemo` for expensive computations
+    - TypeScript interfaces for props
+  </Tab>
+  
+  <Tab title="State Management">
+    **Use the right tool:**
+    
+    - **Jotai atoms** for global state (`src/state/atoms.ts`)
+    - **Zustand stores** for complex state (`src/state/store/`)
+    - **useState** for local component state
+    - **TanStack Router** for URL state
+    
+    **Example:**
+    ```typescript
+    // Jotai atom
+    import { useAtom } from 'jotai';
+    import { tabsAtom } from '@/state/atoms';
+    
+    function MyComponent() {
+      const [tabs, setTabs] = useAtom(tabsAtom);
+      // ...
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Backend (Rust)
+
+<Tabs>
+  <Tab title="Formatting">
+    Use `rustfmt` for formatting:
+    
+    ```bash
+    cd src-tauri
+    cargo fmt
+    ```
+    
+    **Settings:**
+    - 4-space indentation
+    - 100-character line limit
+    - Trailing commas
+  </Tab>
+  
+  <Tab title="Linting">
+    Use `clippy` for linting:
+    
+    ```bash
+    cd src-tauri
+    cargo clippy -- -D warnings
+    ```
+    
+    Fix all clippy warnings before submitting.
+  </Tab>
+  
+  <Tab title="Error Handling">
+    **Use the custom error type:**
+    
+    ```rust
+    use crate::error::Error;
+    
+    #[tauri::command]
+    pub fn my_command() -> Result<Data, Error> {
+        let result = risky_operation()
+            .map_err(Error::from)?;
+        
+        Ok(result)
+    }
+    ```
+    
+    **Error types** in `src-tauri/src/error.rs`:
+    - `Error::Database` - Database errors
+    - `Error::FileSystem` - File I/O errors
+    - `Error::Parse` - Parsing errors
+    - `Error::Engine` - Chess engine errors
+  </Tab>
+  
+  <Tab title="Tauri Commands">
+    **Command structure:**
+    
+    ```rust
+    #[tauri::command]
+    #[specta::specta]  // For TypeScript bindings
+    pub async fn my_async_command(
+        app: tauri::AppHandle,
+        param: String,
+    ) -> Result<ReturnType, Error> {
+        // Implementation
+        Ok(result)
+    }
+    ```
+    
+    **Guidelines:**
+    - Use `async` for I/O operations
+    - Return `Result<T, Error>` for error handling
+    - Add `#[specta::specta]` for TypeScript bindings
+    - Document with `///` comments
+  </Tab>
+</Tabs>
+
+## Testing
+
+### Frontend Tests
+
+<Steps>
+  <Step title="Write Tests">
+    Add tests in `__tests__/` directories:
+    
+    ```typescript
+    // src/features/boards/__tests__/BoardGame.test.tsx
+    import { render, screen } from '@testing-library/react';
+    import { BoardGame } from '../components/BoardGame';
+    
+    describe('BoardGame', () => {
+      it('renders chess board', () => {
+        render(<BoardGame />);
+        expect(screen.getByRole('main')).toBeInTheDocument();
+      });
+    });
+    ```
+  </Step>
+  
+  <Step title="Run Tests">
+    ```bash
+    # Run all tests
+    pnpm test
+    
+    # Run with coverage
+    pnpm vitest run --coverage
+    
+    # Watch mode
+    pnpm vitest
+    ```
+  </Step>
+</Steps>
+
+### Backend Tests
+
+<Steps>
+  <Step title="Write Tests">
+    Add tests in module files:
+    
+    ```rust
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        
+        #[test]
+        fn test_position_search() {
+            let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+            let result = search_position(fen, true);
+            assert!(result.is_ok());
+        }
+    }
+    ```
+  </Step>
+  
+  <Step title="Run Tests">
+    ```bash
+    cd src-tauri
+    
+    # Run all tests
+    cargo test
+    
+    # Run specific test
+    cargo test test_position_search
+    
+    # Run with output
+    cargo test -- --nocapture
+    ```
+  </Step>
+</Steps>
+
+See [Testing Guide](/development/testing) for comprehensive coverage.
+
+## Submitting a Pull Request
+
+<Steps>
+  <Step title="Ensure Quality">
+    Before submitting, verify:
+    
+    <Tabs>
+      <Tab title="Build Check">
+        ```bash
+        # Build without bundling installer
+        pnpm tauri build -b none
+        
+        # Test the build
+        ./src-tauri/target/release/obsidian-chess-studio
+        ```
+      </Tab>
+      
+      <Tab title="Format & Lint">
+        ```bash
+        # Format frontend
+        pnpm format
+        
+        # Lint frontend
+        pnpm lint:fix
+        
+        # Format backend
+        cd src-tauri && cargo fmt
+        
+        # Lint backend
+        cargo clippy -- -D warnings
+        ```
+      </Tab>
+      
+      <Tab title="Run Tests">
+        ```bash
+        # Frontend tests
+        pnpm test
+        
+        # Backend tests
+        cd src-tauri && cargo test
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+  
+  <Step title="Commit Changes">
+    Write clear commit messages:
+    
+    ```bash
+    # Stage changes
+    git add .
+    
+    # Commit with descriptive message
+    git commit -m "feat: add position search caching"
+    ```
+    
+    **Commit message format:**
+    - `feat:` - New feature
+    - `fix:` - Bug fix
+    - `refactor:` - Code refactoring
+    - `docs:` - Documentation changes
+    - `test:` - Test additions/fixes
+    - `chore:` - Build/tooling changes
+  </Step>
+  
+  <Step title="Push to Fork">
+    ```bash
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+  
+  <Step title="Create Pull Request">
+    1. Go to the [comparison page](https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/compare)
+    2. Select your fork and branch in the `compare:` dropdown
+    3. Click "Create pull request"
+    4. Fill in the PR template:
+       - **Title:** Clear, descriptive title
+       - **Description:** What changes were made and why
+       - **Testing:** How you tested the changes
+       - **Screenshots:** For UI changes
+       - **Related issues:** Link to issues this PR addresses
+  </Step>
+  
+  <Step title="Address Review Feedback">
+    Maintainers will review your PR. Address any feedback:
+    
+    ```bash
+    # Make changes based on feedback
+    git add .
+    git commit -m "refactor: address review feedback"
+    git push origin feature/your-feature-name
+    ```
+  </Step>
+</Steps>
+
+## PR Checklist
+
+Before submitting, ensure:
+
+- [ ] Code builds successfully (`pnpm tauri build -b none`)
+- [ ] All tests pass (`pnpm test` and `cargo test`)
+- [ ] Code is formatted (`pnpm format` and `cargo fmt`)
+- [ ] No linting errors (`pnpm lint:fix` and `cargo clippy`)
+- [ ] Commit messages follow convention
+- [ ] PR description is clear and complete
+- [ ] Screenshots included for UI changes
+- [ ] Documentation updated if needed
+
+## Contributing Translations
+
+See the dedicated [Translations Guide](/development/translations) for:
+- Adding new languages
+- Updating existing translations
+- Testing translations
+- Translation workflow
+
+## Code Review Process
+
+<Steps>
+  <Step title="Initial Review">
+    Maintainers will review your PR within **1-3 days**.
+  </Step>
+  
+  <Step title="Feedback">
+    You may receive:
+    - **Requested changes** - Required before merge
+    - **Suggestions** - Optional improvements
+    - **Questions** - Clarifications needed
+  </Step>
+  
+  <Step title="Approval">
+    Once approved, maintainers will merge your PR.
+  </Step>
+  
+  <Step title="Post-Merge">
+    Your changes will be included in the next release!
+  </Step>
+</Steps>
+
+## Getting Help
+
+If you need assistance:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Discussions" icon="github" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/discussions">
+    Ask questions and get help from the community
+  </Card>
+  
+  <Card title="Issues" icon="circle-exclamation" href="https://github.com/luisrivasnoriega/Obsidian-Chess-Studio/issues">
+    Report bugs or request features
+  </Card>
+</CardGroup>
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the **GPL-3.0 License**.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Development Overview" href="/development/overview" icon="code">
+    Learn about the tech stack
+  </Card>
+  
+  <Card title="Testing Guide" href="/development/testing" icon="flask">
+    Write comprehensive tests
+  </Card>
+  
+  <Card title="Architecture" href="/development/architecture/frontend" icon="diagram-project">
+    Understand the codebase
+  </Card>
+  
+  <Card title="Translations" href="/development/translations" icon="language">
+    Help localize the app
+  </Card>
+</CardGroup>
