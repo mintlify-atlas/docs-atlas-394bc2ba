@@ -1,0 +1,127 @@
+{
+  "projectType": "saas",
+  "projectName": "Obsidian Chess Studio",
+  "projectDescription": "A comprehensive, open-source chess analysis platform combining powerful engine integration, advanced game analysis, and intelligent training systems.",
+  "theme": "palm",
+  "primaryColor": "#94cb04",
+  "lightColor": "#545454",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "User Guide",
+            "pages": [
+              "guide/profiles",
+              "guide/importing-games",
+              "guide/game-analysis",
+              "guide/database-management",
+              "guide/position-search",
+              "guide/puzzles",
+              "guide/opening-repertoire"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/engine-integration",
+              "features/multi-engine-analysis",
+              "features/player-statistics",
+              "features/pawn-structures",
+              "features/opening-analysis",
+              "features/account-sync",
+              "features/customization"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/keyboard-shortcuts",
+              "advanced/database-optimization",
+              "advanced/tablebase-integration"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Development",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "development/overview",
+              "development/building-from-source",
+              "development/project-structure"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "development/contributing",
+              "development/testing",
+              "development/translations"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "development/architecture/frontend",
+              "development/architecture/backend",
+              "development/architecture/database"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Community",
+        "groups": [
+          {
+            "group": "Resources",
+            "pages": [
+              "community/support",
+              "community/faq",
+              "community/changelog"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Multi-engine chess analysis with UCI support",
+    "Game import from Lichess, Chess.com, and PGN files",
+    "Opening repertoire training with spaced repetition",
+    "Exact and partial position search",
+    "Adaptive puzzle system with custom Elo rating",
+    "Comprehensive player statistics and performance tracking",
+    "Pawn structure analysis and classification",
+    "Cross-platform support (Windows, macOS, Linux, Android)",
+    "Local SQLite database with data ownership",
+    "Multi-profile system with account integration"
+  ],
+  "publicApiSurface": [
+    "Game analysis commands (analyze_game, get_best_moves)",
+    "Database operations (init_profile_db, search_position, get_games)",
+    "Engine management (get_engine_config, kill_engine)",
+    "Puzzle system (get_puzzle, import_puzzle_file)",
+    "Opening lookup (get_opening_from_fen, search_opening_name)",
+    "Player statistics (calculate_player_game_stats, calculate_player_openings_stats)",
+    "Pawn structures (compute_pawn_structures)",
+    "Account integration (get_lichess_account, get_chesscom_account)",
+    "File operations (download_file, save_welcome_card_image)",
+    "PGN operations (read_games, write_game, convert_pgn)",
+    "FIDE integration (find_fide_player, fetch_fide_profile_html)",
+    "Variant management (build_variants_tree, get_variant_position)",
+    "ChessBase integration (chessbase_login, chessbase_search_position)"
+  ]
+}
